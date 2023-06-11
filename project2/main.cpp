@@ -405,28 +405,30 @@ void drawSnow() {
 	}
 }
 
-
+//显示函数
 void display() {
 
+	// 清除颜色缓冲区和深度缓冲区
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//启用深度测试
 	glEnable(GL_DEPTH_TEST);
 
+	// 设置摄像机位置和观察方向
 	ptr1->use();
-	//ptr1->setVec4("lightPos",glm::vec4(10.0f, 60.0f, 4.0f, 1.0f));
-	// pass projection matrix to shader (note that in this case it could change every frame)
+	// 将投影矩阵传递给着色器(注意，在这种情况下，它可以改变每一帧)
 	ptr1->setVec3("viewPos", cameraPos);
 	glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 	ptr1->setMat4("projection", projection);
 
-	// camera/view transformation
+	// 相机/视口变换
 	glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	ptr1->setMat4("view", view);
 
-	//starting snow using particle effect
+	// 使用粒子效果开始下雪
 	drawSnow();
 	
-	//house
+	// 房屋模型读取
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.2f, 0.0f, 0.0f)); 
 	model = glm::scale(model, glm::vec3(1.0f/100, 1.0f/100, 1.0f/100));	
@@ -434,7 +436,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr2->Draw(ptr1);
 
-	//base
+	// 地面
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); 
 	model = glm::scale(model, glm::vec3(1.5f, 1.0f, 1.5f));	
@@ -442,14 +444,14 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr3->Draw(ptr1);
 
-	//mountain terrain
+	// 山脉地形
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f)); 
 	model = glm::scale(model, glm::vec3(3.5f, 2.7f, 3.5f));	
 	ptr1->setMat4("model", model);
 	ptr4->Draw(ptr1);
 
-	//reindeer 1
+	// 驯鹿 1
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, Mov); 
 	model = glm::scale(model, glm::vec3(0.1f/100, 0.1f/100, 0.1f/100));	
@@ -459,7 +461,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr5->Draw(ptr1);
 
-	//reindeer 2 right
+	// 驯鹿 2 right
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(1.0f, 0.0f, 0.48f)); 
 	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
@@ -469,7 +471,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr5->Draw(ptr1);
 
-	//reindeer 3 left
+	// 驯鹿 3 left
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.8f, 0.0f, 0.63f)); 
 	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
@@ -479,7 +481,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr5->Draw(ptr1);
 
-	//reindeer 4 back facing
+	// 驯鹿 4 back facing
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, Mov_1); 
 	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
@@ -489,7 +491,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr5->Draw(ptr1);
 
-	//reindeer back on mountain
+	// 驯鹿 back on mountain
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.8f, 0.46f, -1.3f)); 
 	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
@@ -499,7 +501,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr5->Draw(ptr1);
 
-	//reindeer front on mountain
+	// 驯鹿 front on mountain
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(1.0f, 0.68f, -1.6f)); 
 	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
@@ -509,7 +511,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr5->Draw(ptr1);
 
-	//reindeer more front on mountain
+	// 驯鹿 more front on mountain
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.7f, 0.85f, -1.95f)); 
 	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
@@ -519,7 +521,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr5->Draw(ptr1);
 
-	//reindeer 1 left side scene
+	// 驯鹿 1 left side scene
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-0.9f, 0.3f, -2.1f)); 
 	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
@@ -528,7 +530,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr5->Draw(ptr1);
 
-	//reindeer left side scene front
+	// 驯鹿 left side scene front
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-0.7f, 0.17f, -1.7f)); 
 	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
@@ -537,7 +539,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr5->Draw(ptr1);
 	   
-	//reindeer behind house
+	// 驯鹿 behind house
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-0.3f, 0.0f, -0.7f)); 
 	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
@@ -547,7 +549,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr5->Draw(ptr1);
 
-	//bench on right towards mountain
+	// 长椅 on right towards mountain
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(1.4f, 0.0f, 0.3f));
 	model = glm::scale(model, glm::vec3(0.1f/2.6));	
@@ -555,7 +557,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr7->Draw(ptr1);
 
-	//bench on right towards camera
+	// 长椅 on right towards camera
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(1.4f, 0.0f, 0.7f));
 	model = glm::scale(model, glm::vec3(0.1f / 2.6));	
@@ -563,7 +565,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr7->Draw(ptr1);
 
-	//bench on left
+	// 长椅 on left
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 0.3f));
 	model = glm::scale(model, glm::vec3(0.1f / 2.6));	
@@ -571,21 +573,21 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr7->Draw(ptr1);
 
-	//lamp on left
+	//长椅 on left
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-1.1f, 0.0f, 0.27f)); 
 	model = glm::scale(model, glm::vec3(0.1f / 2.6));	
 	ptr1->setMat4("model", model);
 	ptr8->Draw(ptr1);
 
-	//lamp on right
+	// 灯 左侧
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.7, 0.0, -0.2));
 	model = glm::scale(model, glm::vec3(0.1f / 2.6));	
 	ptr1->setMat4("model", model);
 	ptr8->Draw(ptr1);
 
-	//car
+	// 汽车
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-1.0, 0.0, -0.1));
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -593,7 +595,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr9->Draw(ptr1);
 
-	//snowman right beside house
+	// 房屋右侧雪人
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, Mov_2);
 	model = glm::scale(model, glm::vec3(0.05f));	
@@ -601,7 +603,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr10->Draw(ptr1);
 
-	//snowman right beside bench
+	// 长椅右侧雪人
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(1.2, -0.02, 0.35));
 	model = glm::scale(model, glm::vec3(0.05f));	
@@ -609,7 +611,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr10->Draw(ptr1);
 
-	//snowman left
+	// 左侧雪人
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-1.3, -0.02, -0.9));
 	model = glm::scale(model, glm::vec3(0.05f));	
@@ -617,14 +619,14 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr10->Draw(ptr1);
 
-	//road
+	// 道路
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-3.4, 0.0, -0.7)); 
 	model = glm::scale(model, glm::vec3(0.1f/8, 0.1f/10, 0.1f/5));	
 	ptr1->setMat4("model", model);
 	ptr11->Draw(ptr1);
 
-	//barrier beside lamppost
+	// 灯柱旁的护栏
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-1.2, 0.0, -0.15));
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -632,7 +634,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier extreme left (from left)
+	// 左侧极限出的护栏
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-5.0, 0.0, -0.5)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -640,7 +642,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 1 (from left)
+	// 护栏 1 (from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-4.5, 0.0, -0.5)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -648,7 +650,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 2 (from left)
+	// 护栏 2 (from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-4.0, 0.0, -0.5)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -656,7 +658,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 3 (from left)
+	// 护栏 3 (from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-3.5, 0.0, -0.5)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -664,7 +666,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 4 (from left)
+	// 护栏 4 (from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-3.0, 0.0, -0.5)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -672,7 +674,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 5 (from left)
+	// 护栏 5 (from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-2.5, 0.0, -0.5)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -680,7 +682,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 6 (from left)
+	// 护栏 6 (from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-2.0, 0.0, -0.5)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -688,7 +690,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 1 across road(from left)
+	// 护栏 1 across road(from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-4.75, 0.0, -1.2)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -696,7 +698,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 2 across road(from left)
+	// 护栏 2 across road(from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-4.25, 0.0, -1.2)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -704,7 +706,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 3 across road(from left)
+	// 护栏 3 across road(from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-3.75, 0.0, -1.2)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -712,7 +714,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 4 across road(from left)
+	// 护栏 4 across road(from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-3.25, 0.0, -1.2)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -720,7 +722,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 5 across road(from left)
+	// 护栏 5 across road(from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-2.75, 0.0, -1.2)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -728,7 +730,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 6 across road(from left)
+	// 护栏 6 across road(from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-2.25, 0.0, -1.2)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -736,7 +738,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//barrier 7 across road(from left)
+	// 护栏 7 across road(from left)
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-1.75, 0.0, -1.2)); 
 	model = glm::scale(model, glm::vec3(0.15f));	
@@ -744,8 +746,8 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr12->Draw(ptr1);
 
-	//TREES BELOW
-	//beside lamppose on left
+	//树木
+	// 在左边的灯旁
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-1.0, 0.0, -0.1)); 
 	model = glm::scale(model, glm::vec3(0.1f));	
@@ -753,7 +755,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr13->Draw(ptr1);
 
-	//in front of house
+	// 房屋前
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-0.2, 0.0, 0.25)); 
 	model = glm::scale(model, glm::vec3(0.07f));	
@@ -761,7 +763,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr14->Draw(ptr1);
 
-	//right - in front of bench
+	// 就在长凳前
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.5, 0.0, 0.9)); 
 	model = glm::scale(model, glm::vec3(0.07f));	
@@ -769,7 +771,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr14->Draw(ptr1);
 
-	//right - in between benches
+	// 就在长椅之间
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(1.6, 0.0, -0.6)); 
 	model = glm::scale(model, glm::vec3(0.07f));	
@@ -777,7 +779,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr14->Draw(ptr1);
 
-	//behind house
+	// 房屋后
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-0.2, 0.0, -1.9)); 
 	model = glm::scale(model, glm::vec3(0.07f));	
@@ -785,7 +787,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr14->Draw(ptr1);
 
-	//beside lamppose on right
+	// 在右边的灯旁
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(1.7, 0.0, -0.4)); 
 	model = glm::scale(model, glm::vec3(0.1f));	
@@ -793,7 +795,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr13->Draw(ptr1);
 
-	//on mountain - right, in front
+	// 在山的右前方
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(2.3, 0.6, -1.2)); 
 	model = glm::scale(model, glm::vec3(0.1f));	
@@ -801,7 +803,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr13->Draw(ptr1);
 
-	//on mountain - right, on top
+	// 在山顶右方
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(1.8, 0.9, -1.9)); 
 	model = glm::scale(model, glm::vec3(0.1f));	
@@ -809,7 +811,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr13->Draw(ptr1);
 
-	//on mountain - left, on top
+	// 在山顶左方
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.7, 0.3, -1.7)); 
 	model = glm::scale(model, glm::vec3(0.1f));	
@@ -817,7 +819,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr13->Draw(ptr1);
 
-	//on small mountain - left
+	// 小山左方
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-0.5, 0.2, -1.7)); 
 	model = glm::scale(model, glm::vec3(0.1f));	
@@ -825,7 +827,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr13->Draw(ptr1);
 
-	//left behind
+	// 左后方
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-1.5, 0.2, -2.4)); 
 	model = glm::scale(model, glm::vec3(0.1f));	
@@ -833,7 +835,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr13->Draw(ptr1);
 
-	//left behind more left
+	// 左前方
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-3.5, -0.1, -4.0)); 
 	model = glm::scale(model, glm::vec3(0.07f));	
@@ -841,7 +843,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr14->Draw(ptr1);
 
-	//left
+	// 左侧
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-2.2, 0.0, -0.25)); 
 	model = glm::scale(model, glm::vec3(0.1f));	
@@ -849,7 +851,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr13->Draw(ptr1);
 
-	//left on road 1
+	// 路左方
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-3.2, 0.0, -0.2)); 
 	model = glm::scale(model, glm::vec3(0.1f));	
@@ -857,7 +859,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr13->Draw(ptr1);
 
-	//left across road 1
+	// 路左过去 1
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-3.8, -0.0, -1.0)); 
 	model = glm::scale(model, glm::vec3(0.1f));	
@@ -865,7 +867,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr13->Draw(ptr1);
 
-	//left across road 2
+	// 路左过去 2
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-2.7, -0.0, -1.0)); 
 	model = glm::scale(model, glm::vec3(0.1f));	
@@ -873,7 +875,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr13->Draw(ptr1);
 
-	//left across road 3
+	// 路左过去 3
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(-1.7, -0.0, -1.0)); 
 	model = glm::scale(model, glm::vec3(0.1f));	
@@ -881,7 +883,7 @@ void display() {
 	ptr1->setMat4("model", model);
 	ptr13->Draw(ptr1);
 
-	//cube right
+	// 右侧光源
 	b_shader->use();
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, lightpos_2);
@@ -894,7 +896,7 @@ void display() {
 	glBindVertexArray(VAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
-	//cube left
+	// 左侧光源
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, lightpos_3);
 	model = glm::scale(model, glm::vec3(1.0f/30));
@@ -905,7 +907,7 @@ void display() {
 
 	glDepthFunc(GL_LEQUAL);
 
-	//cube mapping - skybox
+	// 天空盒mapping
 	sky_shader->use();
 	sky_shader->setInt("skybox", 0);
 	sky_shader->setMat4("projection", projection);
@@ -916,7 +918,12 @@ void display() {
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skymapTexture);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
-
+	/*
+	glDepthFunc() 函数用于指定深度测试函数的类型。
+	在这里，参数 GL_LESS 指示深度测试函数应该是 "小于" 的关系。
+	这意味着，如果当前像素的深度值小于存储在深度缓冲区中的深度值，
+	那么该像素将被绘制。否则，它将被丢弃
+	*/
 	glDepthFunc(GL_LESS);
 
 
@@ -927,26 +934,26 @@ void display() {
 
 int main(int argc, char** argv) {
 
-	// Set up the window
+	// 窗口初始化
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glutInitWindowSize(800, 600);
 	glutCreateWindow("Final Project Submission - 21355130");
 	
-	// Tell glut where the display function is
+	// 告诉glut显示函数在哪里
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyPress);
 	glutMotionFunc(mouseMotionHandler);
 
 
-	// A call to glewInit() must be done after glut is initialized!
+	// 对glewInit()的调用必须在glut初始化之后完成
 	GLenum res = glewInit();
-	// Check for any errors
+	// 检查错误
 	if (res != GLEW_OK) {
 		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
 		return 1;
 	}
-	// Set up your objects and shaders
+	// 设置所有对象和着色器
 	ptr1 = new Shader("..\\VertexS.vert", "..\\FragmentS1.frag");
 	b_shader = new Shader("..\\b_vert.vert", "..\\b_frag.frag");
 	sky_shader = new Shader("..\\box_shader.vert", "..\\box_fragment.frag");
@@ -964,7 +971,7 @@ int main(int argc, char** argv) {
 	ptr13 = new Model("..\\models\\trees\\treemain.obj");
 	ptr14 = new Model("..\\models\\trees\\tree2.obj");
 
-	//cube light
+	// 光源设置
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glBindVertexArray(VAO);
@@ -973,7 +980,7 @@ int main(int argc, char** argv) {
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3* sizeof(float), 0);
 
-	//skybox
+	// 天空盒设置
 	glGenVertexArrays(1, &skyboxVAO);
 	glGenBuffers(1, &skyboxVBO);
 	glBindVertexArray(skyboxVAO);
@@ -983,7 +990,7 @@ int main(int argc, char** argv) {
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 	skymapTexture = loadskymap(faces);
 
-	// Initialize particles for particle effect
+	// 初始化例子
 	for (int loop = 0; loop < MAX_PARTICLES; loop++) {
 		createParticles(loop);
 	}

@@ -12,79 +12,80 @@
 #include "stb_image.h"
 #include "Model.h"
 
-#define MAX_PARTICLES 1000
+#define MAX_PARTICLES 1000 // 定义最大粒子数
 
-float slowdown = 1.0;
-float velocity = 0.0;
-float zoom = -40.0;
+float slowdown = 1.0;  // 粒子减速因子
+float velocity = 0.0;  // 粒子速度
+float zoom = -40.0;   // 摄像机的缩放
 
 typedef struct {
-	// Life
-	bool alive;	// is the particle alive?
-	float life;	// particle lifespan
-	float fade; // decay
-	// color
+	// 生命
+	bool alive;   // 粒子存活状态
+	float life;   // 粒子的寿命
+	float fade;   // 粒子衰减速度
+	// 颜色
 	float red;
 	float green;
 	float blue;
-	// Position/direction
+	// 位置/方向
 	float xpos;
 	float ypos;
 	float zpos;
-	// Velocity/Direction, only goes down in y dir
+	// 速度/方向，只在y方向上运动
 	float vel;
-	// Gravity
+	// 重力
 	float gravity;
 }particles;
 
-particles par_sys[MAX_PARTICLES];
-Shader* ptr1;
-Shader* b_shader;
-Shader* sky_shader;
-Model* ptr2, *ptr3, *ptr4, *ptr5, *ptr6, *ptr7, *ptr8, *ptr9, *ptr10, *ptr11, *ptr12, *ptr13, *ptr14;
-unsigned int texture1;
-unsigned int EBO;
-unsigned int skyboxVAO, skyboxVBO;
-unsigned int skymapTexture;
+particles par_sys[MAX_PARTICLES];  // 粒子数组
+Shader* ptr1;                      // 着色器指针
+Shader* b_shader;                  // 边框着色器指针
+Shader* sky_shader;                // 天空着色器指针
+Model* ptr2, * ptr3, * ptr4, * ptr5, * ptr6, * ptr7, * ptr8, * ptr9, * ptr10, * ptr11, * ptr12, * ptr13, * ptr14;  // 模型指针
+unsigned int texture1;             // 纹理ID
+unsigned int EBO;                  // 索引缓冲对象ID
+unsigned int skyboxVAO, skyboxVBO;  // 天空盒顶点数组对象和顶点缓冲对象
+unsigned int skymapTexture;        // 天空盒纹理ID
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, 3.0f);     // 摄像机位置
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);  // 摄像机方向
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);      // 摄像机的上方向
 
-glm::vec3 Mov = glm::vec3(0.9f, 0.0f, 0.4f);
-glm::vec3 Mov_1 = glm::vec3(0.8f, 0.0f, 0.3f);
-glm::vec3 Mov_2 = glm::vec3(0.6f, -0.02f, 0.8); 
-float r1 = 0.0f;
-float r2 = 180.0f;
-float s1 = -25.0f;
+glm::vec3 Mov = glm::vec3(0.9f, 0.0f, 0.4f);    // 移动向量
+glm::vec3 Mov_1 = glm::vec3(0.8f, 0.0f, 0.3f);  // 移动向量1
+glm::vec3 Mov_2 = glm::vec3(0.6f, -0.02f, 0.8); // 移动向量2
+float r1 = 0.0f;   // 旋转角度1
+float r2 = 180.0f; // 旋转角度2
+float s1 = -25.0f; // 缩放因子1
 
 glm::vec3 lightpos_2 = glm::vec3(0.7f, 0.63f, -0.2f);
 glm::vec3 lightpos_3 = glm::vec3(-1.1f, 0.63f, 0.27f);
 
 
 bool firstMouse = true;
-float yaw = -90.0f;	// yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing to the right so we initially rotate a bit to the left.
-float pitch = 0.0f;
-float lastX = 800.0f / 2.0;
-float lastY = 600.0 / 2.0;
-float fov = 45.0f;
+float yaw = -90.0f; // 偏航角初始值为-90.0度，因为偏航角为0时，方向向量指向右侧，所以初始时稍微向左旋转一些。
+float pitch = 0.0f; // 俯仰角初始值为0度
+float lastX = 800.0f / 2.0;  // 上次鼠标位置的X坐标
+float lastY = 600.0 / 2.0;   // 上次鼠标位置的Y坐标
+float fov = 45.0f;           // 透视投影的视野
 
-glm::vec3 Position;
-glm::vec3 Front;
-glm::vec3 Up;
-glm::vec3 Right;
-glm::vec3 WorldUp;
+glm::vec3 Position;  // 位置向量
+glm::vec3 Front;     // 前方向量
+glm::vec3 Up;        // 上方向量
+glm::vec3 Right;     // 右方向量
+glm::vec3 WorldUp;   // 场景上方向量
 
-// Macro for indexing vertex buffer
+// 定义宏以索引顶点缓冲
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 using namespace std;
 
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 800;  // 屏幕宽度
+const unsigned int SCR_HEIGHT = 600; // 屏幕高度
 
-GLuint VAO, VBO;
+GLuint VAO, VBO;  // 顶点数组对象和顶点缓冲对象
 
+// 立方体顶点坐标
 float vertices[] = {
 	   -0.5f, -0.5f, -0.5f,
 		0.5f, -0.5f, -0.5f,
@@ -130,43 +131,43 @@ float vertices[] = {
 };
 
 float skyboxVertices[] = {
-	// positions   
-	//values based on max of projection which is 100 in my case
+	// 天空盒顶点坐标
+	// 坐标值基于投影的最大值，此处为100
 	-12.0f,  12.0f, -12.0f,
 	-12.0f, -12.0f, -12.0f,
 	 12.0f, -12.0f, -12.0f,
 	 12.0f, -12.0f, -12.0f,
 	 12.0f,  12.0f, -12.0f,
 	-12.0f,  12.0f, -12.0f,
-			   
+
 	-12.0f, -12.0f,  12.0f,
 	-12.0f, -12.0f, -12.0f,
 	-12.0f,  12.0f, -12.0f,
 	-12.0f,  12.0f, -12.0f,
 	-12.0f,  12.0f,  12.0f,
 	-12.0f, -12.0f,  12.0f,
-			   
+
 	 12.0f, -12.0f, -12.0f,
 	 12.0f, -12.0f,  12.0f,
 	 12.0f,  12.0f,  12.0f,
 	 12.0f,  12.0f,  12.0f,
 	 12.0f,  12.0f, -12.0f,
 	 12.0f, -12.0f, -12.0f,
-	 	   
+
 	-12.0f, -12.0f,  12.0f,
 	-12.0f,  12.0f,  12.0f,
 	 12.0f,  12.0f,  12.0f,
 	 12.0f,  12.0f,  12.0f,
 	 12.0f, -12.0f,  12.0f,
 	-12.0f, -12.0f,  12.0f,
-	 	  
+
 	-12.0f,  12.0f, -12.0f,
 	 12.0f,  12.0f, -12.0f,
 	 12.0f,  12.0f,  12.0f,
 	 12.0f,  12.0f,  12.0f,
 	-12.0f,  12.0f,  12.0f,
 	-12.0f,  12.0f, -12.0f,
-			   
+
 	-12.0f, -12.0f, -12.0f,
 	-12.0f, -12.0f,  12.0f,
 	 12.0f, -12.0f, -12.0f,
@@ -175,6 +176,7 @@ float skyboxVertices[] = {
 	 12.0f, -12.0f,  12.0f
 };
 
+// 天空盒纹理图像路径
 vector<std::string> faces
 {
 
@@ -186,6 +188,7 @@ vector<std::string> faces
 	"..\\skybox\\negz.jpg"
 };
 
+// 处理鼠标移动事件
 void mouseMotionHandler(int x, int y)
 {
 	float xoffset = x - lastX;
@@ -197,6 +200,7 @@ void mouseMotionHandler(int x, int y)
 	xoffset *= sensitivity;
 	yoffset *= sensitivity;
 
+	// 根据鼠标移动的偏移量计算偏航角和俯仰角
 	yaw += xoffset;
 	pitch += yoffset;
 
@@ -205,6 +209,7 @@ void mouseMotionHandler(int x, int y)
 	if (pitch < -89.0f)
 		pitch = -89.0;
 
+	// 根据偏航角和俯仰角计算摄像机的方向向量
 	glm::vec3 direction;
 	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 	direction.y = sin(glm::radians(pitch));
@@ -215,25 +220,30 @@ void mouseMotionHandler(int x, int y)
 	cameraUp = glm::normalize(glm::cross(Right, cameraFront));
 }
 
+// 处理键盘按键事件
 void keyPress(unsigned char key, int x, int y) {
 
-	const float cameraSpeed = 0.05f; // adjust accordingly
+	const float cameraSpeed = 0.05f; // 摄像机移动速度
 
 	switch (key)
 	{
 	case 'w':
+		// 摄像机向前移动
 		cameraPos += cameraSpeed * cameraFront;
 		break;
 
 	case 's':
+		// 摄像机向后移动
 		cameraPos -= cameraSpeed * cameraFront;
 		break;
 
 	case 'd':
+		// 摄像机向右移动
 		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 		break;
-	case 'a':
 
+	case 'a':
+		// 摄像机向左移动
 		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 		break;
 	case 't':
@@ -315,7 +325,7 @@ void keyPress(unsigned char key, int x, int y) {
 	}
 }
 
-
+// 加载天空盒纹理
 unsigned int loadskymap(vector<std::string> faces)
 {
 	unsigned int textureID;
@@ -346,7 +356,7 @@ unsigned int loadskymap(vector<std::string> faces)
 	return textureID;
 }
 
-//Initialise the snowflake particles
+// 初始化雪花粒子
 void createParticles(int i) {
 	par_sys[i].alive = true;
 	par_sys[i].life = 2.0;
@@ -361,11 +371,11 @@ void createParticles(int i) {
 	par_sys[i].blue = 1.0;
 
 	par_sys[i].vel = velocity;
-	par_sys[i].gravity = -0.8;//-0.8;
+	par_sys[i].gravity = -0.8;// 重力加速度
 
 }
 
-// For Snowflake falling down and loading the model
+// 绘制下落的雪花并更新其位置
 void drawSnow() {
 	float x, y, z;
 	for (int loop = 0; loop < MAX_PARTICLES; loop = loop + 2) {
@@ -373,31 +383,33 @@ void drawSnow() {
 			x = par_sys[loop].xpos;
 			y = par_sys[loop].ypos;
 			z = par_sys[loop].zpos + zoom;
-			
+
+			// 将摄像机位置、投影矩阵、视图矩阵和模型矩阵传递给着色器，并使用指定的着色器绘制模型
 			ptr1->setVec3("viewPos", cameraPos);
 			glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 			ptr1->setMat4("projection", projection);
 			glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 			ptr1->setMat4("view", view);
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(x,y,z)); 
-			model = glm::scale(model, glm::vec3(1.0f/1000));
+			model = glm::translate(model, glm::vec3(x, y, z));
+			model = glm::scale(model, glm::vec3(1.0f / 1000));
 			ptr1->setMat4("model", model);
 			ptr6->Draw(ptr1);
-			
 
-			// Update values
-			//Move
+
+			// 更新粒子的位置
+			// 移动
 			par_sys[loop].ypos += par_sys[loop].vel / (slowdown * 1000);
 			par_sys[loop].vel += par_sys[loop].gravity;
-			// Decay
+			// 衰变
 			par_sys[loop].life -= par_sys[loop].fade;
 
+			// 如果粒子掉出了视野范围，重新生成一个新的雪花粒子
 			if (par_sys[loop].ypos <= -10) {
 				par_sys[loop].life = -1.0;
 			}
 
-			//Revive 
+			// 如果粒子寿命结束，重新生成一个新的雪花粒子 
 			if (par_sys[loop].life < 0.0) {
 				createParticles(loop);
 			}

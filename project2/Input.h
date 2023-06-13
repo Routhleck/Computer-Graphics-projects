@@ -7,40 +7,40 @@
 
 extern float yaw;
 extern float pitch;
-extern bool isCursor;  // ÊÇ·ñÏÔÊ¾Êó±ê¹â±ê
+extern bool isCursor;  // æ˜¯å¦æ˜¾ç¤ºé¼ æ ‡å…‰æ ‡
 
-extern bool keyState[256];  // ´æ´¢¼üÅÌ°´¼ü×´Ì¬µÄÊı×é
+extern bool keyState[256];  // å­˜å‚¨é”®ç›˜æŒ‰é”®çŠ¶æ€çš„æ•°ç»„
 
-extern bool isFullScreen;   // ÊÇ·ñÈ«ÆÁ
+extern bool isFullScreen;   // æ˜¯å¦å…¨å±
 
-extern float sensitivity;  // Êó±êÒÆ¶¯ÁéÃô¶È
-extern float cameraSpeed;  // ÉãÏñ»úÒÆ¶¯ËÙ¶È
+extern float sensitivity;  // é¼ æ ‡ç§»åŠ¨çµæ•åº¦
+extern float cameraSpeed;  // æ‘„åƒæœºç§»åŠ¨é€Ÿåº¦
 
-extern int window_width;   // ´°¿Ú¿í¶È
-extern int window_height;  // ´°¿Ú¸ß¶È
+extern int window_width;   // çª—å£å®½åº¦
+extern int window_height;  // çª—å£é«˜åº¦
 
-extern int lastMouseX;  // ÉÏÒ»´ÎÊó±êµÄXÎ»ÖÃ
-extern int lastMouseY;  // ÉÏÒ»´ÎÊó±êµÄYÎ»ÖÃ
+extern int lastMouseX;  // ä¸Šä¸€æ¬¡é¼ æ ‡çš„Xä½ç½®
+extern int lastMouseY;  // ä¸Šä¸€æ¬¡é¼ æ ‡çš„Yä½ç½®
 
-extern glm::vec3 cameraPos;   // ÉãÏñ»úÎ»ÖÃ
-extern glm::vec3 cameraFront; // ÉãÏñ»úÇ°·½Ïò
-extern glm::vec3 Right;       // ÓÒ·½ÏòÏòÁ¿
-extern glm::vec3 cameraUp;    // ÉÏ·½ÏòÏòÁ¿
+extern glm::vec3 cameraPos;   // æ‘„åƒæœºä½ç½®
+extern glm::vec3 cameraFront; // æ‘„åƒæœºå‰æ–¹å‘
+extern glm::vec3 Right;       // å³æ–¹å‘å‘é‡
+extern glm::vec3 cameraUp;    // ä¸Šæ–¹å‘å‘é‡
 
 extern bool particles_alive;
 extern float particles_life;
 extern int particles_fadeMax;
 extern float particles_gravity;
 
-// »Øµ÷º¯Êı
-void mouseMotionHandler(int x, int y);            // ´¦ÀíÊó±êÒÆ¶¯ÊÂ¼ş
-void mouseButtonHandler(int button, int state, int x, int y);   // ´¦ÀíÊó±ê°´¼üÊÂ¼ş
-void keyPressRelease(unsigned char key, int x, int y, bool isPressed);  // ´¦Àí¼üÅÌ°´ÏÂÊÍ·ÅÊÂ¼ş
+// å›è°ƒå‡½æ•°
+void mouseMotionHandler(int x, int y)  ;          // å¤„ç†é¼ æ ‡ç§»åŠ¨äº‹ä»¶
+void mouseButtonHandler(int button, int state, int x, int y);  // å¤„ç†é¼ æ ‡æŒ‰é”®äº‹ä»¶
+void keyPressRelease(unsigned char key, int x, int y, bool isPressed);  // å¤„ç†é”®ç›˜æŒ‰ä¸‹é‡Šæ”¾äº‹ä»¶
 
-// ¸üĞÂÉãÏñ»úµÄÎ»ÖÃ
+// æ›´æ–°æ‘„åƒæœºçš„ä½ç½®
 void updateCamera();
 
-// ×¢²á¼üÅÌÏà¹ØµÄº¯Êı
+// æ³¨å†Œé”®ç›˜ç›¸å…³çš„å‡½æ•°
 void registerKeyBoardFunc();
 
 #endif // INPUT_H

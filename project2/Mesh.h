@@ -16,6 +16,7 @@ using namespace std;
 
 #define MAX_BONE_INFLUENCE 4
 
+// 顶点结构体
 struct Vertex {
     // position
     glm::vec3 Position;
@@ -33,6 +34,7 @@ struct Vertex {
 	float m_Weights[MAX_BONE_INFLUENCE];
 };
 
+// 材质结构体
 struct Texture {
     unsigned int id;
     string type;
@@ -41,13 +43,13 @@ struct Texture {
 
 class Mesh {
 public:
-    // mesh Data
-    vector<Vertex>       vertices;
-    vector<unsigned int> indices;
+    // 网格体数据
+    vector<Vertex>       vertices; // 存储网格的顶点数据。
+    vector<unsigned int> indices; // 存储网格的索引数据，用于绘制三角形面。
     vector<Texture>      textures;
     unsigned int VAO;
 
-    // constructor
+    // 结构体
     Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures)
     {
         this->vertices = vertices;
@@ -97,49 +99,51 @@ public:
     }
 
 private:
-    // render data 
+    // 需要渲染的数据
     unsigned int VBO, EBO;
 
-    // initializes all the buffer objects/arrays
+    // 初始化所有buffer的object和array
     void setupMesh()
     {
-        // create buffers/arrays
+        // 创建buffer和Array
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
         glGenBuffers(1, &EBO);
 
         glBindVertexArray(VAO);
-        // load data into vertex buffers
+        // 将数据加载到顶点buffer
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        // A great thing about structs is that their memory layout is sequential for all its items.
-        // The effect is that we can simply pass a pointer to the struct and it translates perfectly to a glm::vec3/2 array which
-        // again translates to 3/2 floats which translates to a byte array.
+		/*
+		结构体的一大优点是其所有项的内存布局都是顺序的。
+		其效果是，我们可以简单地传递一个指针到结构体，它完美地转换为glm::vec3 / 2数组
+		再次转化为3 / 2个浮点数，转化为字节数组
+		*/
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);  
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
-        // set the vertex attribute pointers
-        // vertex Positions
+        // 设置顶点属性指针
+        // 顶点位置
         glEnableVertexAttribArray(0);	
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-        // vertex normals
-        glEnableVertexAttribArray(1);	
+        // 顶点法线
+        glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
-        // vertex texture coords
-        glEnableVertexAttribArray(2);	
+        // 顶点纹理坐标
+        glEnableVertexAttribArray(2);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
-        // vertex tangent
+        // 顶点切线
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Tangent));
-        // vertex bitangent
+        // 顶点副切线
         glEnableVertexAttribArray(4);
         glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent));
-		// ids
+		// 顶点ID
 		glEnableVertexAttribArray(5);
 		glVertexAttribIPointer(5, 4, GL_INT, sizeof(Vertex), (void*)offsetof(Vertex, m_BoneIDs));
 
-		// weights
+		// 权重
 		glEnableVertexAttribArray(6);
 		glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_Weights));
         glBindVertexArray(0);

@@ -1,6 +1,6 @@
 #include "Particles.h"
 
-// ³õÊ¼»¯Ñ©»¨Á£×Ó
+// åˆå§‹åŒ–é›ªèŠ±ç²’å­
 void createParticles() {
 	particles temp;
 	temp.alive = particles_alive;
@@ -13,15 +13,15 @@ void createParticles() {
 	temp.green = 0.5;
 	temp.blue = 1.0;
 	temp.vel = 0.0;
-	temp.gravity = particles_gravity;// ÖØÁ¦¼ÓËÙ¶È
+	temp.gravity = particles_gravity; // é‡åŠ›åŠ é€Ÿåº¦
 
-	for (int i = 0; i < MAX_PARTICLES; i++) {
+	for (int i = 0;i < MAX_PARTICLES;i++) {
 		par_sys.push_back(temp);
 	}
 
 }
 
-// Îªµ¥¸öÁ£×ÓÖØĞÂ³õÊ¼»¯
+// ä¸ºå•ä¸ªç²’å­é‡æ–°åˆå§‹åŒ–
 void respawnByIndex(int index) {
 	par_sys[index].alive = particles_alive;
 	par_sys[index].life = particles_life;
@@ -33,34 +33,34 @@ void respawnByIndex(int index) {
 	par_sys[index].green = 0.5;
 	par_sys[index].blue = 1.0;
 	par_sys[index].vel = 0.0;
-	par_sys[index].gravity = particles_gravity;// ÖØÁ¦¼ÓËÙ¶È
+	par_sys[index].gravity = particles_gravity; // é‡åŠ›åŠ é€Ÿåº¦
 }
 
-// // ÎªËùÓĞÁ£×ÓÉèÖÃ´æ»î×´Ì¬
+// // ä¸ºæ‰€æœ‰ç²’å­è®¾ç½®å­˜æ´»çŠ¶æ€
 // void setAlive(bool alive) {
-// 	for (int i = 0; i < MAX_PARTICLES; i++) {
-// 		par_sys[i].alive = alive;
+// 	for (int i = 0 i < MAX_PARTICLES i++) {
+// 		par_sys[i].alive = alive
 // 	}
 // }
 
-// // ÎªËùÓĞÁ£×ÓÉèÖÃÊÙÃü
+// // ä¸ºæ‰€æœ‰ç²’å­è®¾ç½®å¯¿å‘½
 // void setLife(float life) {
-// 	for (int i = 0; i < MAX_PARTICLES; i++) {
-// 		par_sys[i].life = life;
+// 	for (int i = 0 i < MAX_PARTICLES i++) {
+// 		par_sys[i].life = life
 // 	}
 // }
 
-// // ÎªËùÓĞÁ£×ÓÉèÖÃË¥¼õËÙ¶È
+// // ä¸ºæ‰€æœ‰ç²’å­è®¾ç½®è¡°å‡é€Ÿåº¦
 // void setFade(int fadeMAX) {
-// 	for (int i = 0; i < MAX_PARTICLES; i++) {
-// 		par_sys[i].fade = float(rand() % fadeMAX) / 1000.0f + 0.003f;
+// 	for (int i = 0 i < MAX_PARTICLES i++) {
+// 		par_sys[i].fade = float(rand() % fadeMAX) / 1000.0f + 0.003f
 // 	}
 // }
 
-// // ÎªËùÓĞÁ£×ÓÉèÖÃÖØÁ¦
+// // ä¸ºæ‰€æœ‰ç²’å­è®¾ç½®é‡åŠ›
 // void setGravity(float gravity) {
-// 	for (int i = 0; i < MAX_PARTICLES; i++) {
-// 		par_sys[i].gravity = gravity;
+// 	for (int i = 0 i < MAX_PARTICLES i++) {
+// 		par_sys[i].gravity = gravity
 // 	}
 // }
 
@@ -68,8 +68,8 @@ void respawnByIndex(int index) {
 void updateParticles() {
 	std::vector <particles>().swap(par_sys);
 	createParticles();
-	// setAlive(alive);
-	// setLife(life);
-	// setFade(fadeMAX);
-	// setGravity(gravity);
+	// setAlive(alive)
+	// setLife(life)
+	// setFade(fadeMAX)
+	// setGravity(gravity)
 }

@@ -13,7 +13,7 @@ class Shader
 public:
     // 着色器id
     GLuint ID;
-    // constructor generates the shader on the fly
+    // 构造函数动态生成着色器
     // ------------------------------------------------------------------------
     // 构造函数，传入顶点着色器和片段着色器的文件路径
 

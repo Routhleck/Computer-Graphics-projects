@@ -1,7 +1,7 @@
 #include "Gui.h"
 
 void renderGUI() {
-	// ÖØÖÃ OpenGL äÖÈ¾×´Ì¬
+	// é‡ç½® OpenGL æ¸²æŸ“çŠ¶æ€
 	glUseProgram(0);
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -9,46 +9,50 @@ void renderGUI() {
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-	// ¿ªÊ¼ĞÂµÄ ImGui Ö¡
+	// å¼€å§‹æ–°çš„ ImGui å¸§
 	ImGui_ImplOpenGL2_NewFrame();
 	ImGui_ImplGLUT_NewFrame();
 	ImGui::NewFrame();
 
-	// ÉèÖÃ½çÃæ³ß´ç
+	// è®¾ç½®ç•Œé¢å°ºå¯¸
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize = ImVec2(static_cast<float>(window_width), static_cast<float>(window_height));
 
-	// ´´½¨ºÍäÖÈ¾ GUI ½çÃæµÄ´úÂë...
+	// åˆ›å»ºå’Œæ¸²æŸ“ GUI ç•Œé¢çš„ä»£ç ...
 	if (ImGui::Begin("Setting", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize)) {
-		// Ìí¼Ó "Continue" °´Å¥
+		// æ·»åŠ  "Continue" æŒ‰é’®
 		if (ImGui::Button("Continue")) {
-			// ´¦Àíµã»÷ "Continue" °´Å¥µÄÂß¼­
+			// å¤„ç†ç‚¹å‡» "Continue" æŒ‰é’®çš„é€»è¾‘
 			isCursor = false;
 		}
 
-		// Ìí¼ÓÀàĞÍ²¿·Ö
+		// æ·»åŠ ç±»å‹éƒ¨åˆ†
 		if (ImGui::CollapsingHeader("Camera parameter")) {
-			// Ìí¼Ó Type 1 ¶ÔÓ¦µÄ²ÎÊı¿Ø¼ş
+			// æ·»åŠ  Type 1 å¯¹åº”çš„å‚æ•°æ§ä»¶
 			ImGui::SliderFloat("Sensitivity", &sensitivity, 0.1f, 1.0f);
 			ImGui::SliderFloat("Camera Speed", &cameraSpeed, 0.01f, 0.50f);
 			ImGui::SliderFloat("FOV", &fov, 15.0f, 120.0f);
-			// Ìí¼Ó¸ü¶àµÄ²ÎÊı¿Ø¼ş...
+			// æ·»åŠ æ›´å¤šçš„å‚æ•°æ§ä»¶...
 		}
 
 		if (ImGui::CollapsingHeader("Snow Particles")) {
-			// Ìí¼Ó Type 2 ¶ÔÓ¦µÄ²ÎÊı¿Ø¼ş
+			// æ·»åŠ  Type 2 å¯¹åº”çš„å‚æ•°æ§ä»¶
 			ImGui::Checkbox("Alive", &particles_alive);
 			ImGui::SliderInt("Max particles", &MAX_PARTICLES, 0, 5000);
 			ImGui::SliderFloat("Life", &particles_life, 0.0f, 10.0f);
 			ImGui::SliderInt("Max Fade Factor", &particles_fadeMax, 0, 2000);
 			ImGui::SliderFloat("Gravity", &particles_gravity, -2.0f, 1.0f);
 			ImGui::SliderFloat("Zoom", &zoom, -60.0f, 60.0f);
-			// Ìí¼Ó¸ü¶àµÄ²ÎÊı¿Ø¼ş...
+			// æ·»åŠ æ›´å¤šçš„å‚æ•°æ§ä»¶...
 		}
 
-		// Ìí¼Ó "Exit" °´Å¥
+		if (ImGui::CollapsingHeader("Fog")) {
+
+		}
+
+		// æ·»åŠ  "Exit" æŒ‰é’®
 		if (ImGui::Button("Exit")) {
-			// ´¦Àíµã»÷ "Exit" °´Å¥µÄÂß¼­
+			// å¤„ç†ç‚¹å‡» "Exit" æŒ‰é’®çš„é€»è¾‘
 			exit(0);
 		}
 	}
@@ -60,23 +64,23 @@ void renderGUI() {
 
 
 
-// ³õÊ¼»¯ImGuiºÍÏà¹ØµÄÉÏÏÂÎÄ
+// åˆå§‹åŒ–ImGuiå’Œç›¸å…³çš„ä¸Šä¸‹æ–‡
 void initGUI(void*) {
-	// ³õÊ¼»¯ ImGui ÉÏÏÂÎÄ
+	// åˆå§‹åŒ– ImGui ä¸Šä¸‹æ–‡
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 
-	// ÉèÖÃ ImGui äÖÈ¾Æ÷µÄ»Øµ÷º¯Êı
+	// è®¾ç½® ImGui æ¸²æŸ“å™¨çš„å›è°ƒå‡½æ•°
 	ImGui_ImplOpenGL2_Init();
 	ImGui_ImplGLUT_Init();
 
-	// ÉèÖÃ ImGui µÄÏÔÊ¾³ß´ç
+	// è®¾ç½® ImGui çš„æ˜¾ç¤ºå°ºå¯¸
 	io.DisplaySize.x = static_cast<float>(window_width);
 	io.DisplaySize.y = static_cast<float>(window_height);
+
 }
 
-
-// ÇåÀíImGuiºÍÏà¹ØµÄÉÏÏÂÎÄ
+// æ¸…ç†ImGuiå’Œç›¸å…³çš„ä¸Šä¸‹æ–‡
 void cleanupGUI() {
 	ImGui_ImplOpenGL2_Shutdown();
 	ImGui_ImplGLUT_Shutdown();

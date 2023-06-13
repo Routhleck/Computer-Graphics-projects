@@ -12,21 +12,21 @@
 
 
 typedef struct {
-	// ÉúÃü
-	bool alive;   // Á£×Ó´æ»î×´Ì¬
-	float life;   // Á£×ÓµÄÊÙÃü
-	float fade;   // Á£×ÓË¥¼õËÙ¶È
-	// ÑÕÉ«
+	// ç”Ÿå‘½
+	bool alive;   // ç²’å­å­˜æ´»çŠ¶æ€
+	float life;   // ç²’å­çš„å¯¿å‘½
+	float fade;   // ç²’å­è¡°å‡é€Ÿåº¦
+	// é¢œè‰²
 	float red;
 	float green;
 	float blue;
-	// Î»ÖÃ/·½Ïò
+	// ä½ç½®/æ–¹å‘
 	float xpos;
 	float ypos;
 	float zpos;
-	// ËÙ¶È/·½Ïò£¬Ö»ÔÚy·½ÏòÉÏÔË¶¯
+	// é€Ÿåº¦/æ–¹å‘ï¼Œåªåœ¨yæ–¹å‘ä¸Šè¿åŠ¨
 	float vel;
-	// ÖØÁ¦
+	// é‡åŠ›
 	float gravity;
 }particles;
 
@@ -49,25 +49,25 @@ extern int particles_fadeMax;
 extern float particles_gravity;
 extern float particles_slowdown;
 
-// ³õÊ¼»¯Ñ©»¨Á£×Ó
+// åˆå§‹åŒ–é›ªèŠ±ç²’å­
 void createParticles();
 
-// Îªµ¥¸öÁ£×ÓÖØĞÂ³õÊ¼»¯
+// ä¸ºå•ä¸ªç²’å­é‡æ–°åˆå§‹åŒ–
 void respawnByIndex(int index);
 
-// ÎªËùÓĞÁ£×ÓÉèÖÃ´æ»î×´Ì¬
+// ä¸ºæ‰€æœ‰ç²’å­è®¾ç½®å­˜æ´»çŠ¶æ€
 void setAlive(bool alive);
 
-// ÎªËùÓĞÁ£×ÓÉèÖÃÊÙÃü
+// ä¸ºæ‰€æœ‰ç²’å­è®¾ç½®å¯¿å‘½
 void setLife(float life);
 
-// ÎªËùÓĞÁ£×ÓÉèÖÃË¥¼õËÙ¶È
+// ä¸ºæ‰€æœ‰ç²’å­è®¾ç½®è¡°å‡é€Ÿåº¦
 void setFade(int fadeMAX);
 
-// ÎªËùÓĞÁ£×ÓÉèÖÃÖØÁ¦
+// ä¸ºæ‰€æœ‰ç²’å­è®¾ç½®é‡åŠ›
 void setGravity(float gravity);
 
-// ¸üĞÂÁ£×Ó
+// æ›´æ–°ç²’å­
 void updateParticles();
 
 void drawSnow();

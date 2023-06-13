@@ -17,7 +17,7 @@
 #include "Input.h"
 #include "Particles.h"
 
-
+// 全局变量
 
 float particles_slowdown = 1.0;  // 粒子减速因子
 float velocity = 0.0;  // 粒子速度

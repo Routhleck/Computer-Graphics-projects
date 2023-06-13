@@ -66,39 +66,39 @@ void renderGUI() {
 				ImGui::Checkbox("Diffuse Light Enable", &diffuseLight_enable);
 				ImGui::Checkbox("Specular Light Enable", &specularLight_enable);
 				if (ImGui::CollapsingHeader("Kd-Main")) {
-					ImGui::SliderFloat("Kd-Red", &kd1_red, 0.0f, 1.0f);
-					ImGui::SliderFloat("Kd-Green", &kd1_green, 0.0f, 1.0f);
-					ImGui::SliderFloat("Kd-Blue", &kd1_blue, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-Main-Red", &kd1_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-Main-Green", &kd1_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-Main-Blue", &kd1_blue, 0.0f, 1.0f);
 				}
 				if (ImGui::CollapsingHeader("Kd-2")) {
-					ImGui::SliderFloat("Kd-Red", &kd2_red, 0.0f, 1.0f);
-					ImGui::SliderFloat("Kd-Green", &kd2_green, 0.0f, 1.0f);
-					ImGui::SliderFloat("Kd-Blue", &kd2_blue, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-2-Red", &kd2_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-2-Green", &kd2_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-2-Blue", &kd2_blue, 0.0f, 1.0f);
 				}
 				if (ImGui::CollapsingHeader("Kd-3")) {
-					ImGui::SliderFloat("Kd-Red", &kd3_red, 0.0f, 1.0f);
-					ImGui::SliderFloat("Kd-Green", &kd3_green, 0.0f, 1.0f);
-					ImGui::SliderFloat("Kd-Blue", &kd3_blue, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-3-Red", &kd3_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-3-Green", &kd3_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-3-Blue", &kd3_blue, 0.0f, 1.0f);
 				}
 				if (ImGui::CollapsingHeader("Ld-Main")) {
-					ImGui::SliderFloat("Ld-Red", &ld1_red, 0.0f, 1.0f);
-					ImGui::SliderFloat("Ld-Green", &ld1_green, 0.0f, 1.0f);
-					ImGui::SliderFloat("Ld-Blue", &ld1_blue, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-Main-Red", &ld1_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-Main-Green", &ld1_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-Main-Blue", &ld1_blue, 0.0f, 1.0f);
 				}
 				if (ImGui::CollapsingHeader("Ld-2")) {
-					ImGui::SliderFloat("Ld-Red", &ld2_red, 0.0f, 1.0f);
-					ImGui::SliderFloat("Ld-Green", &ld2_green, 0.0f, 1.0f);
-					ImGui::SliderFloat("Ld-Blue", &ld2_blue, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-2-Red", &ld2_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-2-Green", &ld2_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-2-Blue", &ld2_blue, 0.0f, 1.0f);
 				}
 				if (ImGui::CollapsingHeader("Ld-3")) {
-					ImGui::SliderFloat("Ld-Red", &ld3_red, 0.0f, 1.0f);
-					ImGui::SliderFloat("Ld-Green", &ld3_green, 0.0f, 1.0f);
-					ImGui::SliderFloat("Ld-Blue", &ld3_blue, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-3Red", &ld3_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-3Green", &ld3_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-3Blue", &ld3_blue, 0.0f, 1.0f);
 				}
 				if (ImGui::CollapsingHeader("Ld=4")) {
-					ImGui::SliderFloat("Ld-Red", &ld4_red, 0.0f, 1.0f);
-					ImGui::SliderFloat("Ld-Green", &ld4_green, 0.0f, 1.0f);
-					ImGui::SliderFloat("Ld-Blue", &ld4_blue, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld=4-Red", &ld4_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld=4-Green", &ld4_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld=4-Blue", &ld4_blue, 0.0f, 1.0f);
 				}
 		}
 

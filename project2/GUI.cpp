@@ -28,7 +28,7 @@ void renderGUI() {
 
 		// 添加类型部分
 		if (ImGui::CollapsingHeader("Camera parameter")) {
-			// 添加 Type 1 对应的参数控件
+			// 添加 摄像机 对应的参数控件
 			ImGui::SliderFloat("Sensitivity", &sensitivity, 0.1f, 1.0f);
 			ImGui::SliderFloat("Camera Speed", &cameraSpeed, 0.01f, 0.50f);
 			ImGui::SliderFloat("FOV", &fov, 15.0f, 120.0f);
@@ -36,18 +36,25 @@ void renderGUI() {
 		}
 
 		if (ImGui::CollapsingHeader("Snow Particles")) {
-			// 添加 Type 2 对应的参数控件
+			// 添加 粒子 对应的参数控件
 			ImGui::Checkbox("Alive", &particles_alive);
 			ImGui::SliderInt("Max particles", &MAX_PARTICLES, 0, 5000);
 			ImGui::SliderFloat("Life", &particles_life, 0.0f, 10.0f);
-			ImGui::SliderInt("Max Fade Factor", &particles_fadeMax, 0, 2000);
+			ImGui::SliderInt("Max Fade Factor", &particles_fadeMax, 1, 2000);
 			ImGui::SliderFloat("Gravity", &particles_gravity, -2.0f, 1.0f);
 			ImGui::SliderFloat("Zoom", &zoom, -60.0f, 60.0f);
 			// 添加更多的参数控件...
 		}
 
 		if (ImGui::CollapsingHeader("Fog")) {
-
+			// 添加 迷雾 对应的参数控件
+			ImGui::Checkbox("Enable", &fog_display);
+			ImGui::SliderFloat("Max Distance", &fog_maxdist, 0.0f, 100.0f);
+			ImGui::SliderFloat("Min Distance", &fog_mindist, 0.0f, 100.0f);
+			ImGui::SliderFloat("Color-Red", &fog_colour_red, 0.0f, 1.0f);
+			ImGui::SliderFloat("Color-Green", &fog_colour_green, 0.0f, 1.0f);
+			ImGui::SliderFloat("Color-Blue", &fog_colour_blue, 0.0f, 1.0f);
+			// 添加更多的参数控件...
 		}
 
 		// 添加 "Exit" 按钮

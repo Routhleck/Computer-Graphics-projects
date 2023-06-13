@@ -92,6 +92,16 @@ int lastMouseY = window_height / 2;
 int currentMouseX = window_width / 2;
 int currentMouseY = window_height / 2;
 
+// Fog设置
+bool fog_display = true;
+float fog_maxdist = 4.5f;
+float fog_mindist = 0.0f;
+float fog_colour_red = 0.4f;
+float fog_colour_green = 0.4f;
+float fog_colour_blue = 0.4f;
+glm::vec4 fog_colour = glm::vec4(fog_colour_red, fog_colour_green, fog_colour_blue, 1.0f);
+
+
 GLuint VAO, VBO;  // 顶点数组对象和顶点缓冲对象
 
 // 立方体顶点坐标
@@ -796,12 +806,21 @@ void display() {
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skymapTexture);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
+	// Fog效果
+	fog_colour = glm::vec4(fog_colour_red, fog_colour_green, fog_colour_blue, 1.0f);
+	ptr1->use();
+	ptr1->setBool("fog_display", fog_display);
+	ptr1->setFloat("fog_maxdist", fog_maxdist);
+	ptr1->setFloat("fog_mindist", fog_mindist);
+	ptr1->setVec4("fog_colour", fog_colour);
+
 	// 更新摄像机信息
 	updateCamera();
 
 	// 渲染GUI
-	if (isCursor) renderGUI();
-
+	if (isCursor) {
+		renderGUI();
+	}
 	/*
 	glDepthFunc() 函数用于指定深度测试函数的类型。
 	在这里，参数 GL_LESS 指示深度测试函数应该是 "小于" 的关系。
@@ -869,6 +888,7 @@ int main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 
+	// 设置窗口大小
 	glutInitWindowSize(window_width, window_height);
 	glutCreateWindow("Computer Graphics Homework 2 -- Group 4");
 
@@ -910,7 +930,7 @@ int main(int argc, char** argv) {
 
 	// 初始化粒子
 	createParticles();
-
+	
 	glutMainLoop();
 
 	cleanupGUI();

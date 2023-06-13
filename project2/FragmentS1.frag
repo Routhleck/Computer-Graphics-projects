@@ -23,10 +23,11 @@ vec3 Ld2 = vec3 (0.2, 0.2, 0.2);
 vec3 Ld3 = vec3 (0.2, 0.2, 0.2);
 vec3 Ld4 = vec3 (1.0, 1.0, 1.0);
 
+uniform bool fog_display;
+uniform float fog_maxdist;
+uniform float fog_mindist;
+uniform vec4 fog_colour;
 
-float fog_maxdist = 4.5;
-float fog_mindist = 0.0;
-vec4  fog_colour = vec4(0.4, 0.4, 0.4, 1.0);
 
 
 void main()                                                               
@@ -89,11 +90,8 @@ float dist = length(PosRelativeToCam.xyz);
 float fog_factor = (fog_maxdist - dist) / (fog_maxdist - fog_mindist);
 fog_factor = clamp(fog_factor, 0.0, 1.0);
 
-FragColor = mix(fog_colour,FragColor,fog_factor);
+if (fog_display) FragColor = mix(fog_colour,FragColor,fog_factor);
 
 }
 
 
-
-
-    

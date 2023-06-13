@@ -24,6 +24,13 @@ extern int particles_fadeMax;
 extern float particles_gravity;
 extern float zoom;
 
+extern bool fog_display;
+extern float fog_maxdist;
+extern float fog_mindist;
+extern float fog_colour_red;
+extern float fog_colour_green;
+extern float fog_colour_blue ;
+
 void renderGUI();
 void initGUI(void* window);
 void cleanupGUI();

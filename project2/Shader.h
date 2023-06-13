@@ -1,8 +1,8 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include <glm/glm.hpp>
-#include <glad/glad.h>
+//#include <glad/glad.h>
+
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -11,20 +11,20 @@
 class Shader
 {
 public:
-    //着色器id
+    // 着色器id
     GLuint ID;
-    // constructor generates the shader on the fly（构造函数动态生成着色器）
-    // 构造函数，传入顶点着色器和片段着色器的文件路径
+    // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
+    // 构造函数，传入顶点着色器和片段着色器的文件路径
+
     /*
      * @vertexPath 顶点着色器
      * @fragmentPath 片段着色器
      */
     Shader(const char* vertexPath, const char* fragmentPath)
     {
-        //GLuint ex = glCreateShader(GL_VERTEX_SHADER);
-        // 1. retrieve the vertex/fragment source code from filePath
-        //读取顶点着色器和片段着色器源码
+        // GLuint ex = glCreateShader(GL_VERTEX_SHADER);
+        // 读取顶点着色器和片段着色器源码
         std::string vertexCode;
         std::string fragmentCode;
         std::ifstream vShaderFile;
@@ -41,7 +41,7 @@ public:
             // 文件流读取
             vShaderStream << vShaderFile.rdbuf();
             fShaderStream << fShaderFile.rdbuf();
-            // 关闭文件
+            // 关闭文件流
             vShaderFile.close();
             fShaderFile.close();
             // 把文件流导入str中
@@ -52,28 +52,30 @@ public:
         {
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << e.what() << std::endl;
         }
-        //将字符串转换为c字符串
+        // 将字符串转换为c字符串
         const char* vShaderCode = vertexCode.c_str();
         const char* fShaderCode = fragmentCode.c_str();
-        // 2. 创建并编译顶点着色器和片段着色器
+
+        // 创建并编译顶点着色器和片段着色器
         unsigned int vertex, fragment;
-        // vertex shader
+
+        // 顶点着色器
         vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vShaderCode, NULL);
         glCompileShader(vertex);
         checkCompileErrors(vertex, "VERTEX");
-        // fragment Shader
+        // 片段着色器
         fragment = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
         checkCompileErrors(fragment, "FRAGMENT");
-        // 创建着色器程序并附加着色器，然后链接
+        // 着色器程序
         ID = glCreateProgram();
         glAttachShader(ID, vertex);
         glAttachShader(ID, fragment);
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM");
-        // d当着色器已经连接到我们的项目时，不需要单独存在因此删除他们
+        // 当着色器已经连接到我们的项目时，不需要单独存在因此删除他们
         glDeleteShader(vertex);
         glDeleteShader(fragment);
     }
@@ -83,7 +85,7 @@ public:
     {
         glUseProgram(ID);
     }
-    // 设置着色器的uniform
+    // 设置着色器的uniform函数
     // ------------------------------------------------------------------------
     void setBool(const std::string& name, bool value) const
     {
@@ -143,7 +145,7 @@ public:
     }
 
 private:
-    // 检查编译或链接的错误
+    // 检查编译或链接的错误函数
     // ------------------------------------------------------------------------
     void checkCompileErrors(unsigned int shader, std::string type)
     {

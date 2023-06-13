@@ -15,13 +15,19 @@ vec3 lightpos_4 = vec3 (0.22f, 0.06f, 0.62f);
 uniform vec3 viewPos; 
 uniform samplerCube skybox;
 
-vec3 Kd = vec3 (1.0, 1.0, 1.0);
-vec3 Kd2 = vec3 (1.6, 1.6, 0.0);
-vec3 Kd3 = vec3 (0.4, 0.13, 0.11);
-vec3 Ld = vec3 (1.0, 1.0, 1.0);
-vec3 Ld2 = vec3 (0.2, 0.2, 0.2);
-vec3 Ld3 = vec3 (0.2, 0.2, 0.2);
-vec3 Ld4 = vec3 (1.0, 1.0, 1.0);
+uniform vec3 Kd;
+uniform vec3 Kd2;
+uniform vec3 Kd3;
+uniform vec3 Ld;
+uniform vec3 Ld2;
+uniform vec3 Ld3;
+uniform vec3 Ld4;
+uniform bool ambientLight_enable;
+uniform float ambientStrength;
+uniform bool diffuseLight_enable;
+uniform bool specularLight_enable;
+
+
 
 uniform bool fog_display;
 uniform float fog_maxdist;
@@ -34,7 +40,6 @@ void main()
 {               
 
 //AMBIENT
-float ambientStrength = 0.1;
 vec3 ambient = ambientStrength * Kd ;
 
 
@@ -80,6 +85,10 @@ diffuse = diffuse + (diff * Ld4 * Kd3);
 reflectDir = reflect(-lightDir, norm);
 spec = pow(max(dot(viewDir, reflectDir), 0.0), 128);
 specular += specularStrength * spec * Ld4 * Kd3;
+
+if (ambientLight_enable == false) ambient = vec3(0.0f);
+if (diffuseLight_enable == false) diffuse = vec3(0.0f);
+if (specularLight_enable == false) specular = vec3(0.0f);
 
 vec3 final = diffuse + ambient + specular;
 

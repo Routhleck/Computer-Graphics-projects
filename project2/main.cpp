@@ -102,6 +102,42 @@ float fog_colour_blue = 0.4f;
 glm::vec4 fog_colour = glm::vec4(fog_colour_red, fog_colour_green, fog_colour_blue, 1.0f);
 
 
+// Light设置
+bool ambientLight_enable = true;
+bool diffuseLight_enable = true;
+bool specularLight_enable = true;
+float ambientLight_strength = 0.1f;
+float kd1_red = 1.0f;
+float kd1_green = 1.0f;
+float kd1_blue = 1.0f;
+float kd2_red = 1.6f;
+float kd2_green = 1.6f;
+float kd2_blue = 0.0f;
+float kd3_red = 0.4f;
+float kd3_green = 0.13f;
+float kd3_blue = 0.11f;
+float ld1_red = 1.0f;
+float ld1_green = 1.0f;
+float ld1_blue = 1.0f;
+float ld2_red = 0.2f;
+float ld2_green = 0.2f;
+float ld2_blue = 0.2f;
+float ld3_red = 0.2f;
+float ld3_green = 0.2f;
+float ld3_blue = 0.2f;
+float ld4_red = 1.0f;
+float ld4_green = 1.0f;
+float ld4_blue = 1.0f;
+glm::vec3 Kd = glm::vec3(kd1_red, kd1_green, kd1_blue);
+glm::vec3 Kd2 = glm::vec3(kd2_red, kd2_green, kd2_blue);
+glm::vec3 Kd3 = glm::vec3(kd3_red, kd3_green, kd3_blue);
+glm::vec3 Ld = glm::vec3(ld1_red, ld1_green, ld1_blue);
+glm::vec3 Ld2 = glm::vec3(ld2_red, ld2_green, ld2_blue);
+glm::vec3 Ld3 = glm::vec3(ld3_red, ld3_green, ld3_blue);
+glm::vec3 Ld4 = glm::vec3(ld4_red, ld4_green, ld4_blue);
+
+
+
 GLuint VAO, VBO;  // 顶点数组对象和顶点缓冲对象
 
 // 立方体顶点坐标
@@ -292,6 +328,40 @@ void drawSnow() {
 		}
 	}
 }
+
+// 改变Fog参数
+void setFog() {
+	fog_colour = glm::vec4(fog_colour_red, fog_colour_green, fog_colour_blue, 1.0f);
+	ptr1->use();
+	ptr1->setBool("fog_display", fog_display);
+	ptr1->setFloat("fog_maxdist", fog_maxdist);
+	ptr1->setFloat("fog_mindist", fog_mindist);
+	ptr1->setVec4("fog_colour", fog_colour);
+}
+
+// 改变Light参数
+void setLight() {
+	Kd = glm::vec3(kd1_red, kd1_green, kd1_blue);
+	Kd2 = glm::vec3(kd2_red, kd2_green, kd2_blue);
+	Kd3 = glm::vec3(kd3_red, kd3_green, kd3_blue);
+	Ld = glm::vec3(ld1_red, ld1_green, ld1_blue);
+	Ld2 = glm::vec3(ld2_red, ld2_green, ld2_blue);
+	Ld3 = glm::vec3(ld3_red, ld3_green, ld3_blue);
+	Ld4 = glm::vec3(ld4_red, ld4_green, ld4_blue);
+	ptr1->use();
+	ptr1->setVec3("Kd", Kd);
+	ptr1->setVec3("Kd2", Kd2);
+	ptr1->setVec3("Kd3", Kd3);
+	ptr1->setVec3("Ld", Ld);
+	ptr1->setVec3("Ld2", Ld2);
+	ptr1->setVec3("Ld3", Ld3);
+	ptr1->setVec3("Ld4", Ld4);
+	ptr1->setBool("ambientLight_enable", ambientLight_enable);
+	ptr1->setBool("diffuseLight_enable", diffuseLight_enable);
+	ptr1->setBool("specularLight_enable", specularLight_enable);
+	ptr1->setFloat("ambientStrength", ambientLight_strength);
+}
+
 
 //显示函数
 void display() {
@@ -807,12 +877,12 @@ void display() {
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
 	// Fog效果
-	fog_colour = glm::vec4(fog_colour_red, fog_colour_green, fog_colour_blue, 1.0f);
-	ptr1->use();
-	ptr1->setBool("fog_display", fog_display);
-	ptr1->setFloat("fog_maxdist", fog_maxdist);
-	ptr1->setFloat("fog_mindist", fog_mindist);
-	ptr1->setVec4("fog_colour", fog_colour);
+	setFog();
+	
+	// Light效果
+	setLight();
+	
+	
 
 	// 更新摄像机信息
 	updateCamera();

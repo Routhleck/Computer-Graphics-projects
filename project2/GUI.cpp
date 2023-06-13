@@ -56,6 +56,51 @@ void renderGUI() {
 			ImGui::SliderFloat("Color-Blue", &fog_colour_blue, 0.0f, 1.0f);
 			// 添加更多的参数控件...
 		}
+		
+		if (ImGui::CollapsingHeader("Light")) {
+			// 添加 光照 对应的参数控件
+				if (ImGui::CollapsingHeader("Ambient Light")) {
+					ImGui::Checkbox("Ambient Light Enable", &ambientLight_enable);
+					ImGui::SliderFloat("Ambient Light Strength", &ambientLight_strength, 0.0f, 1.0f);
+				}
+				ImGui::Checkbox("Diffuse Light Enable", &diffuseLight_enable);
+				ImGui::Checkbox("Specular Light Enable", &specularLight_enable);
+				if (ImGui::CollapsingHeader("Kd-Main")) {
+					ImGui::SliderFloat("Kd-Red", &kd1_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-Green", &kd1_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-Blue", &kd1_blue, 0.0f, 1.0f);
+				}
+				if (ImGui::CollapsingHeader("Kd-2")) {
+					ImGui::SliderFloat("Kd-Red", &kd2_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-Green", &kd2_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-Blue", &kd2_blue, 0.0f, 1.0f);
+				}
+				if (ImGui::CollapsingHeader("Kd-3")) {
+					ImGui::SliderFloat("Kd-Red", &kd3_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-Green", &kd3_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Kd-Blue", &kd3_blue, 0.0f, 1.0f);
+				}
+				if (ImGui::CollapsingHeader("Ld-Main")) {
+					ImGui::SliderFloat("Ld-Red", &ld1_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-Green", &ld1_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-Blue", &ld1_blue, 0.0f, 1.0f);
+				}
+				if (ImGui::CollapsingHeader("Ld-2")) {
+					ImGui::SliderFloat("Ld-Red", &ld2_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-Green", &ld2_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-Blue", &ld2_blue, 0.0f, 1.0f);
+				}
+				if (ImGui::CollapsingHeader("Ld-3")) {
+					ImGui::SliderFloat("Ld-Red", &ld3_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-Green", &ld3_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-Blue", &ld3_blue, 0.0f, 1.0f);
+				}
+				if (ImGui::CollapsingHeader("Ld=4")) {
+					ImGui::SliderFloat("Ld-Red", &ld4_red, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-Green", &ld4_green, 0.0f, 1.0f);
+					ImGui::SliderFloat("Ld-Blue", &ld4_blue, 0.0f, 1.0f);
+				}
+		}
 
 		// 添加 "Exit" 按钮
 		if (ImGui::Button("Exit")) {

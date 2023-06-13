@@ -5,41 +5,32 @@
 #include <glm/glm/gtc/matrix_transform.hpp>
 #include <glm/glm/gtc/type_ptr.hpp>
 #include <windows.h> //libraries for time etc
+#include <vector>
 #include <mmsystem.h> //libraries for time etc
+
 
 #include "Shader.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "Model.h"
-// #include "GUI.h"
+#include "GUI.h"
 #include "Input.h"
+#include "Particles.h"
 
-#define MAX_PARTICLES 1000 // 定义最大粒子数
 
-float slowdown = 1.0;  // 粒子减速因子
+
+float particles_slowdown = 1.0;  // 粒子减速因子
 float velocity = 0.0;  // 粒子速度
-float zoom = -40.0;   // 摄像机的缩放
 
-typedef struct {
-	// 生命
-	bool alive;   // 粒子存活状态
-	float life;   // 粒子的寿命
-	float fade;   // 粒子衰减速度
-	// 颜色
-	float red;
-	float green;
-	float blue;
-	// 位置/方向
-	float xpos;
-	float ypos;
-	float zpos;
-	// 速度/方向，只在y方向上运动
-	float vel;
-	// 重力
-	float gravity;
-}particles;
+int MAX_PARTICLES = 1000; // 定义最大粒子数
+bool particles_alive = true; // 粒子存活状态
+float particles_life = 2.0f; // 粒子寿命
+int particles_fadeMax = 200; // 粒子衰减速度
+float particles_gravity = -0.8f; // 粒子重力
+float zoom = -40.0;   // 粒子缩放
 
-particles par_sys[MAX_PARTICLES];  // 粒子数组
+
+std::vector<particles> par_sys;  // 粒子vector
 Shader* ptr1;                      // 着色器指针
 Shader* b_shader;                  // 边框着色器指针
 Shader* sky_shader;                // 天空着色器指针
@@ -82,6 +73,7 @@ int window_width = 800;
 int window_height = 600;
 
 bool isFullScreen = false; // 是否全屏（初始值为否）
+bool isCursor = false;      // 是否显示光标（初始值为是）
 
 // 定义宏以索引顶点缓冲
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -93,6 +85,7 @@ const unsigned int SCR_HEIGHT = 600; // 屏幕高度
 
 bool keyState[256];
 float sensitivity = 0.1f; //灵敏度
+float cameraSpeed = 0.05f;      //相机速度
 
 int lastMouseX = window_width / 2;
 int lastMouseY = window_height / 2;
@@ -248,29 +241,10 @@ unsigned int loadskymap(vector<std::string> faces)
 	return textureID;
 }
 
-// 初始化雪花粒子
-void createParticles(int i) {
-	par_sys[i].alive = true;
-	par_sys[i].life = 2.0;
-	par_sys[i].fade = float(rand() % 200) / 1000.0f + 0.003f;
-
-	par_sys[i].xpos = (float)(rand() % 20) - 10;
-	par_sys[i].ypos = 8.0;
-	par_sys[i].zpos = (float)(rand() % 10) + 35;
-
-	par_sys[i].red = 0.5;
-	par_sys[i].green = 0.5;
-	par_sys[i].blue = 1.0;
-
-	par_sys[i].vel = velocity;
-	par_sys[i].gravity = -0.8;// 重力加速度
-
-}
-
 // 绘制下落的雪花并更新其位置
 void drawSnow() {
 	float x, y, z;
-	for (int loop = 0; loop < MAX_PARTICLES; loop = loop + 2) {
+	for (int loop = 0; loop < par_sys.size(); loop = loop + 2) {
 		if (par_sys[loop].alive == true) {
 			x = par_sys[loop].xpos;
 			y = par_sys[loop].ypos;
@@ -278,7 +252,7 @@ void drawSnow() {
 
 			// 将摄像机位置、投影矩阵、视图矩阵和模型矩阵传递给着色器，并使用指定的着色器绘制模型
 			ptr1->setVec3("viewPos", cameraPos);
-			glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			glm::mat4 projection = glm::perspective(glm::radians(fov), (float)window_width / (float)window_height, 0.1f, 100.0f);
 			ptr1->setMat4("projection", projection);
 			glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 			ptr1->setMat4("view", view);
@@ -291,7 +265,7 @@ void drawSnow() {
 
 			// 更新粒子的位置
 			// 移动
-			par_sys[loop].ypos += par_sys[loop].vel / (slowdown * 1000);
+			par_sys[loop].ypos += par_sys[loop].vel / (particles_slowdown * 1000);
 			par_sys[loop].vel += par_sys[loop].gravity;
 			// 衰变
 			par_sys[loop].life -= par_sys[loop].fade;
@@ -303,7 +277,7 @@ void drawSnow() {
 
 			// 如果粒子寿命结束，重新生成一个新的雪花粒子 
 			if (par_sys[loop].life < 0.0) {
-				createParticles(loop);
+				respawnByIndex(loop);
 			}
 		}
 	}
@@ -322,7 +296,7 @@ void display() {
 	ptr1->use();
 	// 将投影矩阵传递给着色器(注意，在这种情况下，它可以改变每一帧)
 	ptr1->setVec3("viewPos", cameraPos);
-	glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(fov), (float)window_width / (float)window_height, 0.1f, 100.0f);
 	ptr1->setMat4("projection", projection);
 
 	// 相机/视口变换
@@ -822,10 +796,11 @@ void display() {
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skymapTexture);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
+	// 更新摄像机信息
 	updateCamera();
 
 	// 渲染GUI
-	// renderGUI();
+	if (isCursor) renderGUI();
 
 	/*
 	glDepthFunc() 函数用于指定深度测试函数的类型。
@@ -906,6 +881,7 @@ int main(int argc, char** argv) {
 	registerKeyBoardFunc();
 	glutMotionFunc(mouseMotionHandler);
 	glutPassiveMotionFunc(mouseMotionHandler);
+	glutMouseFunc(mouseButtonHandler);
 	glutReshapeFunc(windowResizeHandler);
 
 	// 对glewInit()的调用必须在glut初始化之后完成
@@ -918,7 +894,7 @@ int main(int argc, char** argv) {
 	}
 
 	// 初始化ImGui
-	// initGUI(nullptr);
+	initGUI(nullptr);
 
 	// 初始化着色器
 	initShader();
@@ -933,13 +909,11 @@ int main(int argc, char** argv) {
 	initSkybox();
 
 	// 初始化粒子
-	for (int i = 0; i < MAX_PARTICLES; i++) {
-		createParticles(i);
-	}
+	createParticles();
 
 	glutMainLoop();
 
-	// cleanupGUI();
+	cleanupGUI();
 	return 0;
 }
 

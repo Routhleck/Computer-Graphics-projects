@@ -44,12 +44,7 @@ private:
     void loadModel(string const& path)//使用Assimp来加载模型至Assimp的一个叫做scene的数据结构中
     {
         // read file via ASSIMP
-        Assimp::Importer importer;//首先声明了Assimp命名空间内的一个Importer
-        //调用了它的ReadFile函数，这个函数需要一个文件路径，它的第二个参数是一些后期处理(Post-processing)的选项
-        //通过设定aiProcess_Triangulate，我们告诉Assimp，如果模型不是（全部）由三角形组成，它需要将模型所有的图元形状变换为三角形
-        //aiProcess_FlipUVs将在处理的时候翻转y轴的纹理坐标
-        //aiProcess_CalcTangentSpace计算导入网格的切线和副切线。
-        //aiProcess_GenSmoothNormals 为网格中的所有顶点生成平滑法线。
+        Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals| aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
          // 检查错误
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
@@ -169,48 +164,39 @@ private:
         return Mesh(vertices, indices, textures);
     }
 
-// 检查给定类型的所有材质纹理，并在尚未加载的情况下加载纹理。
-// 返回所需的信息作为 Texture 结构。
-vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName)
-{
-    vector<Texture> textures;
-    
-    // 遍历材质中给定类型的所有纹理
-    for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
+    // checks all material textures of a given type and loads the textures if they're not loaded yet.
+    // the required info is returned as a Texture struct.
+    vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName)
     {
-        aiString str;
-        mat->GetTexture(type, i, &str);
-        
-        // 检查纹理是否已加载过，如果是，则跳过加载新纹理的步骤
-        bool skip = false;
-        
-        // 遍历已加载的纹理列表，检查文件路径是否相同
-        for (unsigned int j = 0; j < textures_loaded.size(); j++)
+        vector<Texture> textures;
+        for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
         {
-            if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
+            aiString str;
+            mat->GetTexture(type, i, &str);
+            // check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
+            bool skip = false;
+            for (unsigned int j = 0; j < textures_loaded.size(); j++)
             {
-                textures.push_back(textures_loaded[j]);
-                skip = true; // 文件路径相同的纹理已加载，继续下一个循环（优化）
-                break;
+                if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
+                {
+                    textures.push_back(textures_loaded[j]);
+                    skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
+                    break;
+                }
+            }
+            if (!skip)
+            {   // if texture hasn't been loaded already, load it
+                Texture texture;
+                texture.id = TextureFromFile(str.C_Str(), this->directory);
+                texture.type = typeName;
+                texture.path = str.C_Str();
+                textures.push_back(texture);
+                textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
             }
         }
-        
-        if (!skip)
-        {
-            // 如果纹理尚未加载，则加载它
-            Texture texture;
-            texture.id = TextureFromFile(str.C_Str(), this->directory);
-            texture.type = typeName;
-            texture.path = str.C_Str();
-            textures.push_back(texture);
-            
-            // 将纹理存储为已加载的纹理，以确保不会重复加载冗余纹理。
-            textures_loaded.push_back(texture);
-        }
+        return textures;
     }
-    
-    return textures;
-}
+};
 
 // 从文件加载纹理并返回纹理的 ID
 unsigned int TextureFromFile(const char* path, const string& directory, bool gamma)
@@ -258,3 +244,4 @@ unsigned int TextureFromFile(const char* path, const string& directory, bool gam
 
     return textureID;
 }
+#endif

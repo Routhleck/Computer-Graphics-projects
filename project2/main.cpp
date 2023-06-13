@@ -58,8 +58,8 @@ float r1 = 0.0f;   // 旋转角度1
 float r2 = 180.0f; // 旋转角度2
 float s1 = -25.0f; // 缩放因子1
 
-glm::vec3 lightpos_2 = glm::vec3(0.7f, 0.63f, -0.2f);
-glm::vec3 lightpos_3 = glm::vec3(-1.1f, 0.63f, 0.27f);
+glm::vec3 lightpos_2 = glm::vec3(0.7f, 0.63f, -0.2f); // 光源2位置
+glm::vec3 lightpos_3 = glm::vec3(-1.1f, 0.63f, 0.27f); // 光源3位置
 
 
 bool firstMouse = true;
@@ -74,6 +74,12 @@ glm::vec3 Front;     // 前方向量
 glm::vec3 Up;        // 上方向量
 glm::vec3 Right;     // 右方向量
 glm::vec3 WorldUp;   // 场景上方向量
+
+
+int window_width = 800;
+int window_height = 600;
+
+bool isFullScreen = false; // 是否全屏（初始值为否）
 
 // 定义宏以索引顶点缓冲
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -188,141 +194,132 @@ vector<std::string> faces
 	"..\\skybox\\negz.jpg"
 };
 
+bool keyState[256];
+float sensitivity = 0.1f;
+
+int lastMouseX = window_width / 2;
+int lastMouseY = window_height / 2;
+int currentMouseX = window_width / 2;
+int currentMouseY = window_height / 2;
+
+
+// 窗口大小改变回调函数
+void windowResizeHandler(int width, int height) {
+	window_width = width;
+    window_height = height;
+
+    // 设置视口
+    glViewport(0, 0, window_width, window_height);
+}
+
+
 // 处理鼠标移动事件
 void mouseMotionHandler(int x, int y)
 {
-	float xoffset = x - lastX;
-	float yoffset = lastY - y;
-	lastX = x;
-	lastY = y;
+    // 计算鼠标位置的偏移量
+    float xOffset = (x - lastMouseX) * sensitivity;
+    float yOffset = (lastMouseY - y) * sensitivity;
 
-	float sensitivity = 0.1f;
-	xoffset *= sensitivity;
-	yoffset *= sensitivity;
+    lastMouseX = x;
+    lastMouseY = y;
 
-	// 根据鼠标移动的偏移量计算偏航角和俯仰角
-	yaw += xoffset;
-	pitch += yoffset;
+    // 计算偏移量，并累加到偏航角和俯仰角
+    yaw += xOffset;
+    pitch += yOffset;
 
-	if (pitch > 89.0f)
-		pitch = 89.0;
-	if (pitch < -89.0f)
-		pitch = -89.0;
+    // 确保pitch角度在[-89, 89]范围内，防止屏幕翻转
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
 
-	// 根据偏航角和俯仰角计算摄像机的方向向量
-	glm::vec3 direction;
-	direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	direction.y = sin(glm::radians(pitch));
-	direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    // 根据偏航角和俯仰角计算摄像机的方向向量
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(front);
 
-	cameraFront = direction;
-	Right = glm::normalize(glm::cross(cameraFront, glm::vec3(0.0f, 1.0f, 0.0f)));
-	cameraUp = glm::normalize(glm::cross(Right, cameraFront));
+    // 计算Right和cameraUp向量
+    Right = glm::normalize(glm::cross(cameraFront, glm::vec3(0.0f, 1.0f, 0.0f))); // 注意，这里假定了世界的"向上"方向为(0, 1, 0)
+    cameraUp = glm::normalize(glm::cross(Right, cameraFront));
 }
 
-// 处理键盘按键事件
-void keyPress(unsigned char key, int x, int y) {
 
+// 处理键盘按下释放事件
+void keyPressRelease(unsigned char key, int x, int y, bool isPressed) {
+	if (isPressed) {
+		keyState[key] = true;
+		// ESC退出
+		if (key == 27) {
+			exit(0);
+		}
+		// 全屏幕和窗口模式的切换
+		else if (key == 'f' || key == 'F') {
+			isFullScreen = !isFullScreen;
+			if (isFullScreen) {
+				glutFullScreen();
+			}
+			else {
+				glutReshapeWindow(window_width, window_height);
+				glutPositionWindow(100, 100);
+			}
+		}
+	}
+	else {
+		keyState[key] = false;
+	}
+}
+
+void updateCamera() {
 	const float cameraSpeed = 0.05f; // 摄像机移动速度
 
-	switch (key)
-	{
-	case 'w':
-		// 摄像机向前移动
-		cameraPos += cameraSpeed * cameraFront;
-		break;
-
-	case 's':
-		// 摄像机向后移动
-		cameraPos -= cameraSpeed * cameraFront;
-		break;
-
-	case 'd':
-		// 摄像机向右移动
+	if (keyState['w'] && keyState['d']) {
+		// 同时按下 'w' 和 'd' 键，向前右方移动
 		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-		break;
-
-	case 'a':
-		// 摄像机向左移动
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-		break;
-	case 't':
-		Mov.b += 0.01;
-		glutPostRedisplay();
-		break;
-	case 'f':
-		Mov.r -= 0.01;
-		glutPostRedisplay();
-		break;
-	case 'g':
-		Mov.b -= 0.01;
-		glutPostRedisplay();
-		break;
-	case 'h':
-		Mov.r += 0.01;
-		glutPostRedisplay();
-		break;
-	case 'i':
-		Mov_1.b -= 0.01;
-		glutPostRedisplay();
-		break;
-	case 'j':
-		Mov_1.r -= 0.01;
-		glutPostRedisplay();
-		break;
-	case 'k':
-		Mov_1.b += 0.01;
-		glutPostRedisplay();
-		break;
-	case 'l':
-		Mov_1.r += 0.01;
-		glutPostRedisplay();
-		break;
-	case 'r':
-		r1 += 0.7;
-		glutPostRedisplay();
-		break;
-	case 'y':
-		r1 -= 0.7;
-		glutPostRedisplay();
-		break;
-	case 'u':
-		r2 += 0.7;
-		glutPostRedisplay();
-		break;
-	case 'o':
-		r2 -= 0.7;
-		glutPostRedisplay();
-		break;
-	case 'b':
-		s1 -= 0.7;
-		glutPostRedisplay();
-		break;
-	case 'n':
-		s1 += 0.7;
-		glutPostRedisplay();
-		break;
-	case 'x':
-		Mov_2.b += 0.01;
-		glutPostRedisplay();
-		break;
-	case 'z':
-		Mov_2.r -= 0.01;
-		glutPostRedisplay();
-		break;
-	case 'c':
-		Mov_2.b -= 0.01;
-		glutPostRedisplay();
-		break;
-	case 'v':
-		Mov_2.r += 0.01;
-		glutPostRedisplay();
-		break;
-
-	default:
-		break;
-
+		cameraPos += cameraSpeed * cameraFront;
 	}
+	else if (keyState['w'] && keyState['a']) {
+		// 同时按下 'w' 和 'a' 键，向前左方移动
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		cameraPos += cameraSpeed * cameraFront;
+	}
+	else if (keyState['s'] && keyState['d']) {
+		// 同时按下 's' 和 'd' 键，向后右方移动
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		cameraPos -= cameraSpeed * cameraFront;
+	}
+	else if (keyState['s'] && keyState['a']) {
+		// 同时按下 's' 和 'a' 键，向后左方移动
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		cameraPos -= cameraSpeed * cameraFront;
+	}
+	else if (keyState['w']) {
+		// 只按下 'w' 键，向前移动
+		cameraPos += cameraSpeed * cameraFront;
+	}
+	else if (keyState['s']) {
+		// 只按下 's' 键，向后移动
+		cameraPos -= cameraSpeed * cameraFront;
+	}
+	else if (keyState['d']) {
+		// 只按下 'd' 键，向右移动
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	}
+	else if (keyState['a']) {
+		// 只按下 'a' 键，向左移动
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	}
+}
+
+void registerKeyBoardFunc() {
+	glutKeyboardFunc([](unsigned char key, int x, int y){
+		keyPressRelease(key, x, y, true);
+	});
+
+	glutKeyboardUpFunc([](unsigned char key, int x, int y) {
+		keyPressRelease(key, x, y, false);
+	});
 }
 
 // 加载天空盒纹理
@@ -930,6 +927,8 @@ void display() {
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skymapTexture);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 
+	updateCamera();
+
 	/*
 	glDepthFunc() 函数用于指定深度测试函数的类型。
 	在这里，参数 GL_LESS 指示深度测试函数应该是 "小于" 的关系。
@@ -949,13 +948,20 @@ int main(int argc, char** argv) {
 	// 窗口初始化
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	glutInitWindowSize(800, 600);
-	glutCreateWindow("Final Project Submission - 21355130");
+
+	glutInitWindowSize(window_width, window_height);
+	glutCreateWindow("Computer Graphics Homework 2 -- Group 4");
+
+	// 隐藏鼠标并放在中心
+	glutSetCursor(GLUT_CURSOR_NONE);
+	glutWarpPointer(window_width / 2, window_height / 2);
 	
-	// 告诉glut显示函数在哪里
+	// 注册各种回调函数
 	glutDisplayFunc(display);
-	glutKeyboardFunc(keyPress);
+	registerKeyBoardFunc();
 	glutMotionFunc(mouseMotionHandler);
+	glutPassiveMotionFunc(mouseMotionHandler);
+	glutReshapeFunc(windowResizeHandler);
 
 
 	// 对glewInit()的调用必须在glut初始化之后完成

@@ -11,6 +11,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "Model.h"
+// #include "GUI.h"
+#include "Input.h"
 
 #define MAX_PARTICLES 1000 // 定义最大粒子数
 
@@ -88,6 +90,14 @@ using namespace std;
 
 const unsigned int SCR_WIDTH = 800;  // 屏幕宽度
 const unsigned int SCR_HEIGHT = 600; // 屏幕高度
+
+bool keyState[256];
+float sensitivity = 0.1f; //灵敏度
+
+int lastMouseX = window_width / 2;
+int lastMouseY = window_height / 2;
+int currentMouseX = window_width / 2;
+int currentMouseY = window_height / 2;
 
 GLuint VAO, VBO;  // 顶点数组对象和顶点缓冲对象
 
@@ -194,13 +204,7 @@ vector<std::string> faces
 	"..\\skybox\\negz.jpg"
 };
 
-bool keyState[256];
-float sensitivity = 0.1f;
 
-int lastMouseX = window_width / 2;
-int lastMouseY = window_height / 2;
-int currentMouseX = window_width / 2;
-int currentMouseY = window_height / 2;
 
 
 // 窗口大小改变回调函数
@@ -212,115 +216,6 @@ void windowResizeHandler(int width, int height) {
     glViewport(0, 0, window_width, window_height);
 }
 
-
-// 处理鼠标移动事件
-void mouseMotionHandler(int x, int y)
-{
-    // 计算鼠标位置的偏移量
-    float xOffset = (x - lastMouseX) * sensitivity;
-    float yOffset = (lastMouseY - y) * sensitivity;
-
-    lastMouseX = x;
-    lastMouseY = y;
-
-    // 计算偏移量，并累加到偏航角和俯仰角
-    yaw += xOffset;
-    pitch += yOffset;
-
-    // 确保pitch角度在[-89, 89]范围内，防止屏幕翻转
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    // 根据偏航角和俯仰角计算摄像机的方向向量
-    glm::vec3 front;
-    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    front.y = sin(glm::radians(pitch));
-    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(front);
-
-    // 计算Right和cameraUp向量
-    Right = glm::normalize(glm::cross(cameraFront, glm::vec3(0.0f, 1.0f, 0.0f))); // 注意，这里假定了世界的"向上"方向为(0, 1, 0)
-    cameraUp = glm::normalize(glm::cross(Right, cameraFront));
-}
-
-
-// 处理键盘按下释放事件
-void keyPressRelease(unsigned char key, int x, int y, bool isPressed) {
-	if (isPressed) {
-		keyState[key] = true;
-		// ESC退出
-		if (key == 27) {
-			exit(0);
-		}
-		// 全屏幕和窗口模式的切换
-		else if (key == 'f' || key == 'F') {
-			isFullScreen = !isFullScreen;
-			if (isFullScreen) {
-				glutFullScreen();
-			}
-			else {
-				glutReshapeWindow(window_width, window_height);
-				glutPositionWindow(100, 100);
-			}
-		}
-	}
-	else {
-		keyState[key] = false;
-	}
-}
-
-void updateCamera() {
-	const float cameraSpeed = 0.05f; // 摄像机移动速度
-
-	if (keyState['w'] && keyState['d']) {
-		// 同时按下 'w' 和 'd' 键，向前右方移动
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-		cameraPos += cameraSpeed * cameraFront;
-	}
-	else if (keyState['w'] && keyState['a']) {
-		// 同时按下 'w' 和 'a' 键，向前左方移动
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-		cameraPos += cameraSpeed * cameraFront;
-	}
-	else if (keyState['s'] && keyState['d']) {
-		// 同时按下 's' 和 'd' 键，向后右方移动
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-		cameraPos -= cameraSpeed * cameraFront;
-	}
-	else if (keyState['s'] && keyState['a']) {
-		// 同时按下 's' 和 'a' 键，向后左方移动
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-		cameraPos -= cameraSpeed * cameraFront;
-	}
-	else if (keyState['w']) {
-		// 只按下 'w' 键，向前移动
-		cameraPos += cameraSpeed * cameraFront;
-	}
-	else if (keyState['s']) {
-		// 只按下 's' 键，向后移动
-		cameraPos -= cameraSpeed * cameraFront;
-	}
-	else if (keyState['d']) {
-		// 只按下 'd' 键，向右移动
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-	}
-	else if (keyState['a']) {
-		// 只按下 'a' 键，向左移动
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-	}
-}
-
-void registerKeyBoardFunc() {
-	glutKeyboardFunc([](unsigned char key, int x, int y){
-		keyPressRelease(key, x, y, true);
-	});
-
-	glutKeyboardUpFunc([](unsigned char key, int x, int y) {
-		keyPressRelease(key, x, y, false);
-	});
-}
 
 // 加载天空盒纹理
 unsigned int loadskymap(vector<std::string> faces)
@@ -929,6 +824,9 @@ void display() {
 
 	updateCamera();
 
+	// 渲染GUI
+	// renderGUI();
+
 	/*
 	glDepthFunc() 函数用于指定深度测试函数的类型。
 	在这里，参数 GL_LESS 指示深度测试函数应该是 "小于" 的关系。
@@ -941,6 +839,53 @@ void display() {
 	glutPostRedisplay();
 	glutSwapBuffers();
 
+}
+
+// 初始化着色器
+void initShader() {
+	ptr1 = new Shader("..\\VertexS.vert", "..\\FragmentS1.frag");
+	b_shader = new Shader("..\\b_vert.vert", "..\\b_frag.frag");
+	sky_shader = new Shader("..\\box_shader.vert", "..\\box_fragment.frag");
+}
+
+// 初始化对象
+void initObject() {
+	ptr2 = new Model("..\\models\\home\\finalghar.obj");
+	ptr3 = new Model("..\\models\\plane_dhanju\\ok1.dae");
+	ptr4 = new Model("..\\models\\moun\\everest.obj");
+	ptr5 = new Model("..\\models\\reindeer\\12164_reindeer_v1_L3.obj");
+	ptr6 = new Model("..\\models\\snowflake\\snowf.dae");
+	ptr7 = new Model("..\\models\\bench\\bench.obj");
+	ptr8 = new Model("..\\models\\lamppost\\lamppost.obj");
+	ptr9 = new Model("..\\models\\car\\car.obj");
+	ptr10 = new Model("..\\models\\snowman\\snowman.obj");
+	ptr11 = new Model("..\\models\\road\\road.obj");
+	ptr12 = new Model("..\\models\\barrier\\uploads_files_3661633_Barrier.obj");
+	ptr13 = new Model("..\\models\\trees\\treemain.obj");
+	ptr14 = new Model("..\\models\\trees\\tree2.obj");
+}
+
+// 光源初始化设置
+void initLight() {
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3* sizeof(float), 0);
+}
+
+// 天空盒初始化设置
+void initSkybox() {
+	glGenVertexArrays(1, &skyboxVAO);
+	glGenBuffers(1, &skyboxVBO);
+	glBindVertexArray(skyboxVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	skymapTexture = loadskymap(faces);
 }
 
 int main(int argc, char** argv) {
@@ -963,57 +908,38 @@ int main(int argc, char** argv) {
 	glutPassiveMotionFunc(mouseMotionHandler);
 	glutReshapeFunc(windowResizeHandler);
 
-
 	// 对glewInit()的调用必须在glut初始化之后完成
 	GLenum res = glewInit();
+
 	// 检查错误
 	if (res != GLEW_OK) {
 		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
 		return 1;
 	}
-	// 设置所有对象和着色器
-	ptr1 = new Shader("..\\VertexS.vert", "..\\FragmentS1.frag");
-	b_shader = new Shader("..\\b_vert.vert", "..\\b_frag.frag");
-	sky_shader = new Shader("..\\box_shader.vert", "..\\box_fragment.frag");
-	ptr2 = new Model("..\\models\\home\\finalghar.obj");
-	ptr3 = new Model("..\\models\\plane_dhanju\\ok1.dae");
-	ptr4 = new Model("..\\models\\moun\\everest.obj");
-	ptr5 = new Model("..\\models\\reindeer\\12164_reindeer_v1_L3.obj");
-	ptr6 = new Model("..\\models\\snowflake\\snowf.dae");
-	ptr7 = new Model("..\\models\\bench\\bench.obj");
-	ptr8 = new Model("..\\models\\lamppost\\lamppost.obj");
-	ptr9 = new Model("..\\models\\car\\car.obj");
-	ptr10 = new Model("..\\models\\snowman\\snowman.obj");
-	ptr11 = new Model("..\\models\\road\\road.obj");
-	ptr12 = new Model("..\\models\\barrier\\uploads_files_3661633_Barrier.obj");
-	ptr13 = new Model("..\\models\\trees\\treemain.obj");
-	ptr14 = new Model("..\\models\\trees\\tree2.obj");
 
+	// 初始化ImGui
+	// initGUI(nullptr);
+
+	// 初始化着色器
+	initShader();
+
+	// 初始化对象
+	initObject();
+	
 	// 光源设置
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3* sizeof(float), 0);
+	initLight();
 
 	// 天空盒设置
-	glGenVertexArrays(1, &skyboxVAO);
-	glGenBuffers(1, &skyboxVBO);
-	glBindVertexArray(skyboxVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	skymapTexture = loadskymap(faces);
+	initSkybox();
 
-	// 初始化例子
-	for (int loop = 0; loop < MAX_PARTICLES; loop++) {
-		createParticles(loop);
+	// 初始化粒子
+	for (int i = 0; i < MAX_PARTICLES; i++) {
+		createParticles(i);
 	}
 
 	glutMainLoop();
+
+	// cleanupGUI();
 	return 0;
 }
 

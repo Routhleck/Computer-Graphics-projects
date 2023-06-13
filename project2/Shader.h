@@ -1,8 +1,8 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-//#include <glad/glad.h>
-
+#include <glm/glm.hpp>
+#include <glad/glad.h>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -11,34 +11,40 @@
 class Shader
 {
 public:
-    //unsigned int ID;
+    //着色器id
     GLuint ID;
-    // constructor generates the shader on the fly
+    // constructor generates the shader on the fly（构造函数动态生成着色器）
+    // 构造函数，传入顶点着色器和片段着色器的文件路径
     // ------------------------------------------------------------------------
+    /*
+     * @vertexPath 顶点着色器
+     * @fragmentPath 片段着色器
+     */
     Shader(const char* vertexPath, const char* fragmentPath)
     {
         //GLuint ex = glCreateShader(GL_VERTEX_SHADER);
         // 1. retrieve the vertex/fragment source code from filePath
+        //读取顶点着色器和片段着色器源码
         std::string vertexCode;
         std::string fragmentCode;
         std::ifstream vShaderFile;
         std::ifstream fShaderFile;
-        // ensure ifstream objects can throw exceptions:
+        // 确保ifstream对象可以抛出异常:
         vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         try
         {
-            // open files
+            // 打开顶点和片段着色器文件
             vShaderFile.open(vertexPath);
             fShaderFile.open(fragmentPath);
             std::stringstream vShaderStream, fShaderStream;
-            // read file's buffer contents into streams
+            // 文件流读取
             vShaderStream << vShaderFile.rdbuf();
             fShaderStream << fShaderFile.rdbuf();
-            // close file handlers
+            // 关闭文件
             vShaderFile.close();
             fShaderFile.close();
-            // convert stream into string
+            // 把文件流导入str中
             vertexCode = vShaderStream.str();
             fragmentCode = fShaderStream.str();
         }
@@ -46,9 +52,10 @@ public:
         {
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << e.what() << std::endl;
         }
+        //将字符串转换为c字符串
         const char* vShaderCode = vertexCode.c_str();
         const char* fShaderCode = fragmentCode.c_str();
-        // 2. compile shaders
+        // 2. 创建并编译顶点着色器和片段着色器
         unsigned int vertex, fragment;
         // vertex shader
         vertex = glCreateShader(GL_VERTEX_SHADER);
@@ -60,23 +67,23 @@ public:
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
         checkCompileErrors(fragment, "FRAGMENT");
-        // shader Program
+        // 创建着色器程序并附加着色器，然后链接
         ID = glCreateProgram();
         glAttachShader(ID, vertex);
         glAttachShader(ID, fragment);
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM");
-        // delete the shaders as they're linked into our program now and no longer necessary
+        // d当着色器已经连接到我们的项目时，不需要单独存在因此删除他们
         glDeleteShader(vertex);
         glDeleteShader(fragment);
     }
-    // activate the shader
+    // 激活着色器
     // ------------------------------------------------------------------------
     void use()
     {
         glUseProgram(ID);
     }
-    // utility uniform functions
+    // 设置着色器的uniform
     // ------------------------------------------------------------------------
     void setBool(const std::string& name, bool value) const
     {
@@ -136,7 +143,7 @@ public:
     }
 
 private:
-    // utility function for checking shader compilation/linking errors.
+    // 检查编译或链接的错误
     // ------------------------------------------------------------------------
     void checkCompileErrors(unsigned int shader, std::string type)
     {

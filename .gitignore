@@ -5,8 +5,8 @@
 **.ilk
 **.idb
 **.log
-**.exe
 project1/upload
 project2/models
 project2/skybox
 project2/.idea
+project2/doc

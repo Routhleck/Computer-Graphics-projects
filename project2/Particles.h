@@ -20,11 +20,11 @@ typedef struct {
 	float red;
 	float green;
 	float blue;
-	// 位置/方向
+	// 位置
 	float xpos;
 	float ypos;
 	float zpos;
-	// 速度/方向，只在y方向上运动
+	// 速度，只在y方向上运动
 	float vel;
 	// 重力
 	float gravity;
@@ -55,21 +55,10 @@ void createParticles();
 // 为单个粒子重新初始化
 void respawnByIndex(int index);
 
-// 为所有粒子设置存活状态
-void setAlive(bool alive);
-
-// 为所有粒子设置寿命
-void setLife(float life);
-
-// 为所有粒子设置衰减速度
-void setFade(int fadeMAX);
-
-// 为所有粒子设置重力
-void setGravity(float gravity);
-
 // 更新粒子
 void updateParticles();
 
+// 绘制下雪场景
 void drawSnow();
 
 #endif // PARTICLES_H

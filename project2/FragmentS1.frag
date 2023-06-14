@@ -6,8 +6,9 @@ in vec3 Normal;
 in vec3 FragPos;
 in vec4 PosRelativeToCam;
 
-uniform sampler2D texture1;
-vec3 lightPos = vec3(-4.0, 2.0, 0.2);
+uniform sampler2D diffuseTexture;
+
+uniform vec3 lightPos;
 vec3 lightpos_2 = vec3 (0.7, 0.63, 0.8);
 vec3 lightpos_3 = vec3 (-1.1, 0.63, 0.27);
 vec3 lightpos_4 = vec3 (0.22f, 0.06f, 0.62f);
@@ -34,8 +35,39 @@ uniform float fog_maxdist;
 uniform float fog_mindist;
 uniform vec4 fog_colour;
 
+uniform samplerCube depthMap;
+
+uniform float far_plane;
+uniform bool shadows;
+
+float ShadowCalculation(vec3 fragPos)
+{
+    vec3 fragToLight = fragPos - lightPos;
+    float currentDepth = length(fragToLight);
+
+    float bias = 0.02;
+    float shadow = 0.0;
+    vec3 fragToLightNorm = fragToLight / far_plane;
+    
+    // PCF
+    float texelSize = 1.0 / textureSize(depthMap, 0).x;
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(depthMap, fragToLightNorm + vec3(x, y, 0) * texelSize).r; 
+            pcfDepth *= far_plane; 
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }    
+    }
+    shadow /= 9.0;
+    
+    return shadow;
+}
 
 
+float result_shadow;
+vec3 final;
 void main()                                                               
 {               
 
@@ -90,9 +122,19 @@ if (ambientLight_enable == false) ambient = vec3(0.0f);
 if (diffuseLight_enable == false) diffuse = vec3(0.0f);
 if (specularLight_enable == false) specular = vec3(0.0f);
 
-vec3 final = diffuse + ambient + specular;
 
-FragColor = vec4(final, 1.0f) *  texture(texture1, Tcoord);	
+// calculate shadow
+result_shadow = 0.0f;
+if (shadows == true) {
+    result_shadow = ShadowCalculation(FragPos);
+    final = ambient + (1.0 - result_shadow) * (diffuse + specular); 
+}
+else {
+    final = ambient + diffuse + specular; 
+}
+
+FragColor = vec4(final, 1.0f) * texture(diffuseTexture, Tcoord);    
+
 
 //FOG FACTOR CALCULATION
 float dist = length(PosRelativeToCam.xyz);

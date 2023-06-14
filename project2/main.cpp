@@ -34,25 +34,26 @@ std::vector<particles> par_sys;  // 粒子vector
 Shader* ptr1;                      // 着色器指针
 Shader* b_shader;                  // 边框着色器指针
 Shader* sky_shader;                // 天空着色器指针
+Shader* shadow_shader;             // 阴影着色器指针
 Model* ptr2, * ptr3, * ptr4, * ptr5, * ptr6, * ptr7, * ptr8, * ptr9, * ptr10, * ptr11, * ptr12, * ptr13, * ptr14;  // 模型指针
 unsigned int texture1;             // 纹理ID
 unsigned int EBO;                  // 索引缓冲对象ID
 unsigned int skyboxVAO, skyboxVBO;  // 天空盒顶点数组对象和顶点缓冲对象
 unsigned int skymapTexture;        // 天空盒纹理ID
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.5f, 3.0f);     // 摄像机位置
+glm::vec3 cameraPos = glm::vec3(0.0f, 1.5f, 3.0f);     // 摄像机位置
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);  // 摄像机方向
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);      // 摄像机的上方向
 
-glm::vec3 Mov = glm::vec3(0.9f, 0.0f, 0.4f);    // 移动向量
-glm::vec3 Mov_1 = glm::vec3(0.8f, 0.0f, 0.3f);  // 移动向量1
-glm::vec3 Mov_2 = glm::vec3(0.6f, -0.02f, 0.8); // 移动向量2
+glm::vec3 Mov = glm::vec3(0.9f, 1.0f, 0.4f);    // 移动向量
+glm::vec3 Mov_1 = glm::vec3(0.8f, 1.0f, 0.3f);  // 移动向量1
+glm::vec3 Mov_2 = glm::vec3(0.6f, -1.02f, 0.8); // 移动向量2
 float r1 = 0.0f;   // 旋转角度1
 float r2 = 180.0f; // 旋转角度2
 float s1 = -25.0f; // 缩放因子1
 
-glm::vec3 lightpos_2 = glm::vec3(0.7f, 0.63f, -0.2f); // 光源2位置
-glm::vec3 lightpos_3 = glm::vec3(-1.1f, 0.63f, 0.27f); // 光源3位置
+glm::vec3 lightpos_2 = glm::vec3(0.7f, 1.63f, -0.2f); // 光源2位置
+glm::vec3 lightpos_3 = glm::vec3(-1.1f, 1.63f, 0.27f); // 光源3位置
 
 
 bool firstMouse = true;
@@ -136,8 +137,18 @@ glm::vec3 Ld2 = glm::vec3(ld2_red, ld2_green, ld2_blue);
 glm::vec3 Ld3 = glm::vec3(ld3_red, ld3_green, ld3_blue);
 glm::vec3 Ld4 = glm::vec3(ld4_red, ld4_green, ld4_blue);
 
+// 阴影设置
+unsigned int depthMap;
+const GLuint SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+unsigned int depthMapFBO;
+bool shadows = false;
+GLfloat aspect = (GLfloat)SHADOW_WIDTH/(GLfloat)SHADOW_HEIGHT;
+float near_plane = 1.0f, far_plane = 25.0f;
 
+// 光源位置
+glm::vec3 lightPos = glm::vec3(-4.0, 3.0, 0.2);
 
+// 立方体每个面
 GLuint VAO, VBO;  // 顶点数组对象和顶点缓冲对象
 
 // 立方体顶点坐标
@@ -230,6 +241,9 @@ float skyboxVertices[] = {
 	-12.0f, -12.0f,  12.0f,
 	 12.0f, -12.0f,  12.0f
 };
+
+
+
 
 // 天空盒纹理图像路径
 vector<std::string> faces
@@ -362,484 +376,77 @@ void setLight() {
 	ptr1->setFloat("ambientStrength", ambientLight_strength);
 }
 
+void renderScene(Shader* shader);
 
+float lastFrame = 0.0f;
 //显示函数
 void display() {
+	// 获取时间
+	float t = glutGet(GLUT_ELAPSED_TIME) * 0.001f;
+	float dt = t - lastFrame;
+	lastFrame = t;
+
+	// 移动光源
+	lightPos.z = static_cast<float>(sin(t * 0.5) * 3.0);
+
+
 
 	// 清除颜色缓冲区和深度缓冲区
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//启用深度测试
 	glEnable(GL_DEPTH_TEST);
+	
+	glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), aspect, near_plane, far_plane);
+	std::vector<glm::mat4> shadowTransforms;
+	shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+	shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+	shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+	shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)));
+	shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+	shadowTransforms.push_back(shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
+
+	// render scene to depth cubemap
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	shadow_shader->use();
+	for (unsigned int i = 0; i < 6; ++i)
+		shadow_shader->setMat4("shadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
+	shadow_shader->setFloat("far_plane", far_plane);
+	shadow_shader->setVec3("lightPos", lightPos);
+
+	renderScene(shadow_shader);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// render scene as normal
+	glViewport(0, 0, window_width, window_height);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// 设置摄像机位置和观察方向
 	ptr1->use();
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, depthMap);
 	// 将投影矩阵传递给着色器(注意，在这种情况下，它可以改变每一帧)
-	ptr1->setVec3("viewPos", cameraPos);
 	glm::mat4 projection = glm::perspective(glm::radians(fov), (float)window_width / (float)window_height, 0.1f, 100.0f);
 	ptr1->setMat4("projection", projection);
-
+	
 	// 相机/视口变换
 	glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 	ptr1->setMat4("view", view);
 
+	// set lighting uniforms
+	ptr1->setVec3("lightPos", lightPos);
+	ptr1->setVec3("viewPos", cameraPos);
+	ptr1->setBool("shadows", shadows);
+	ptr1->setFloat("far_plane", far_plane);
+	
+
+	renderScene(ptr1);
+
 	// 使用粒子效果开始下雪
 	drawSnow();
 	
-	// 房屋模型读取
 	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.2f, 0.0f, 0.0f)); 
-	model = glm::scale(model, glm::vec3(1.0f/100, 1.0f/100, 1.0f/100));	
-	model = glm::rotate(model, glm::radians(182.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr2->Draw(ptr1);
-
-	// 地面
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); 
-	model = glm::scale(model, glm::vec3(1.5f, 1.0f, 1.5f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr3->Draw(ptr1);
-
-	// 山脉地形
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f)); 
-	model = glm::scale(model, glm::vec3(3.5f, 2.7f, 3.5f));	
-	ptr1->setMat4("model", model);
-	ptr4->Draw(ptr1);
-
-	// 驯鹿 1
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, Mov); 
-	model = glm::scale(model, glm::vec3(0.1f/100, 0.1f/100, 0.1f/100));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(r1), glm::vec3(0.0f, 0.0f, 1.0f));
-	ptr1->setMat4("model", model);
-	ptr5->Draw(ptr1);
-
-	// 驯鹿 2 right
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(1.0f, 0.0f, 0.48f)); 
-	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(-50.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ptr1->setMat4("model", model);
-	ptr5->Draw(ptr1);
-
-	// 驯鹿 3 left
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.8f, 0.0f, 0.63f)); 
-	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(120.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ptr1->setMat4("model", model);
-	ptr5->Draw(ptr1);
-
-	// 驯鹿 4 back facing
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, Mov_1); 
-	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(r2), glm::vec3(0.0f, 0.0f, 1.0f));
-	ptr1->setMat4("model", model);
-	ptr5->Draw(ptr1);
-
-	// 驯鹿 back on mountain
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.8f, 0.46f, -1.3f)); 
-	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
-	model = glm::rotate(model, glm::radians(110.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(200.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ptr1->setMat4("model", model);
-	ptr5->Draw(ptr1);
-
-	// 驯鹿 front on mountain
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(1.0f, 0.68f, -1.6f)); 
-	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
-	model = glm::rotate(model, glm::radians(112.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(200.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ptr1->setMat4("model", model);
-	ptr5->Draw(ptr1);
-
-	// 驯鹿 more front on mountain
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.7f, 0.85f, -1.95f)); 
-	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
-	model = glm::rotate(model, glm::radians(120.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(203.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ptr1->setMat4("model", model);
-	ptr5->Draw(ptr1);
-
-	// 驯鹿 1 left side scene
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-0.9f, 0.3f, -2.1f)); 
-	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
-	model = glm::rotate(model, glm::radians(98.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr5->Draw(ptr1);
-
-	// 驯鹿 left side scene front
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-0.7f, 0.17f, -1.7f)); 
-	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
-	model = glm::rotate(model, glm::radians(114.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr5->Draw(ptr1);
-	   
-	// 驯鹿 behind house
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-0.3f, 0.0f, -0.7f)); 
-	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(245.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ptr1->setMat4("model", model);
-	ptr5->Draw(ptr1);
-
-	// 长椅 on right towards mountain
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(1.4f, 0.0f, 0.3f));
-	model = glm::scale(model, glm::vec3(0.1f/2.6));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr7->Draw(ptr1);
-
-	// 长椅 on right towards camera
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(1.4f, 0.0f, 0.7f));
-	model = glm::scale(model, glm::vec3(0.1f / 2.6));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr7->Draw(ptr1);
-
-	// 长椅 on left
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 0.3f));
-	model = glm::scale(model, glm::vec3(0.1f / 2.6));	
-	model = glm::rotate(model, glm::radians(-60.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr7->Draw(ptr1);
-
-	//长椅 on left
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-1.1f, 0.0f, 0.27f)); 
-	model = glm::scale(model, glm::vec3(0.1f / 2.6));	
-	ptr1->setMat4("model", model);
-	ptr8->Draw(ptr1);
-
-	// 灯 左侧
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.7, 0.0, -0.2));
-	model = glm::scale(model, glm::vec3(0.1f / 2.6));	
-	ptr1->setMat4("model", model);
-	ptr8->Draw(ptr1);
-
-	// 汽车
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-1.0, 0.0, -0.1));
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr9->Draw(ptr1);
-
-	// 房屋右侧雪人
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, Mov_2);
-	model = glm::scale(model, glm::vec3(0.05f));	
-	model = glm::rotate(model, glm::radians(s1), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr10->Draw(ptr1);
-
-	// 长椅右侧雪人
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(1.2, -0.02, 0.35));
-	model = glm::scale(model, glm::vec3(0.05f));	
-	model = glm::rotate(model, glm::radians(-70.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr10->Draw(ptr1);
-
-	// 左侧雪人
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-1.3, -0.02, -0.9));
-	model = glm::scale(model, glm::vec3(0.05f));	
-	model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr10->Draw(ptr1);
-
-	// 道路
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-3.4, 0.0, -0.7)); 
-	model = glm::scale(model, glm::vec3(0.1f/8, 0.1f/10, 0.1f/5));	
-	ptr1->setMat4("model", model);
-	ptr11->Draw(ptr1);
-
-	// 灯柱旁的护栏
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-1.2, 0.0, -0.15));
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(40.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 左侧极限出的护栏
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-5.0, 0.0, -0.5)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 1 (from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-4.5, 0.0, -0.5)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 2 (from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-4.0, 0.0, -0.5)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 3 (from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-3.5, 0.0, -0.5)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 4 (from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-3.0, 0.0, -0.5)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 5 (from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-2.5, 0.0, -0.5)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 6 (from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-2.0, 0.0, -0.5)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 1 across road(from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-4.75, 0.0, -1.2)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 2 across road(from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-4.25, 0.0, -1.2)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 3 across road(from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-3.75, 0.0, -1.2)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 4 across road(from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-3.25, 0.0, -1.2)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 5 across road(from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-2.75, 0.0, -1.2)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 6 across road(from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-2.25, 0.0, -1.2)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	// 护栏 7 across road(from left)
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-1.75, 0.0, -1.2)); 
-	model = glm::scale(model, glm::vec3(0.15f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr12->Draw(ptr1);
-
-	//树木
-	// 在左边的灯旁
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-1.0, 0.0, -0.1)); 
-	model = glm::scale(model, glm::vec3(0.1f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr13->Draw(ptr1);
-
-	// 房屋前
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-0.2, 0.0, 0.25)); 
-	model = glm::scale(model, glm::vec3(0.07f));	
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr14->Draw(ptr1);
-
-	// 就在长凳前
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.5, 0.0, 0.9)); 
-	model = glm::scale(model, glm::vec3(0.07f));	
-	model = glm::rotate(model, glm::radians(270.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr14->Draw(ptr1);
-
-	// 就在长椅之间
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(1.6, 0.0, -0.6)); 
-	model = glm::scale(model, glm::vec3(0.07f));	
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr14->Draw(ptr1);
-
-	// 房屋后
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-0.2, 0.0, -1.9)); 
-	model = glm::scale(model, glm::vec3(0.07f));	
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr14->Draw(ptr1);
-
-	// 在右边的灯旁
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(1.7, 0.0, -0.4)); 
-	model = glm::scale(model, glm::vec3(0.1f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr13->Draw(ptr1);
-
-	// 在山的右前方
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(2.3, 0.6, -1.2)); 
-	model = glm::scale(model, glm::vec3(0.1f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr13->Draw(ptr1);
-
-	// 在山顶右方
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(1.8, 0.9, -1.9)); 
-	model = glm::scale(model, glm::vec3(0.1f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr13->Draw(ptr1);
-
-	// 在山顶左方
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.7, 0.3, -1.7)); 
-	model = glm::scale(model, glm::vec3(0.1f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr13->Draw(ptr1);
-
-	// 小山左方
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-0.5, 0.2, -1.7)); 
-	model = glm::scale(model, glm::vec3(0.1f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr13->Draw(ptr1);
-
-	// 左后方
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-1.5, 0.2, -2.4)); 
-	model = glm::scale(model, glm::vec3(0.1f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr13->Draw(ptr1);
-
-	// 左前方
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-3.5, -0.1, -4.0)); 
-	model = glm::scale(model, glm::vec3(0.07f));	
-	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr14->Draw(ptr1);
-
-	// 左侧
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-2.2, 0.0, -0.25)); 
-	model = glm::scale(model, glm::vec3(0.1f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr13->Draw(ptr1);
-
-	// 路左方
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-3.2, 0.0, -0.2)); 
-	model = glm::scale(model, glm::vec3(0.1f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr13->Draw(ptr1);
-
-	// 路左过去 1
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-3.8, -0.0, -1.0)); 
-	model = glm::scale(model, glm::vec3(0.1f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr13->Draw(ptr1);
-
-	// 路左过去 2
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-2.7, -0.0, -1.0)); 
-	model = glm::scale(model, glm::vec3(0.1f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr13->Draw(ptr1);
-
-	// 路左过去 3
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(-1.7, -0.0, -1.0)); 
-	model = glm::scale(model, glm::vec3(0.1f));	
-	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ptr1->setMat4("model", model);
-	ptr13->Draw(ptr1);
 
 	// 右侧光源
 	b_shader->use();
@@ -907,9 +514,36 @@ void display() {
 
 // 初始化着色器
 void initShader() {
-	ptr1 = new Shader("..\\VertexS.vert", "..\\FragmentS1.frag");
-	b_shader = new Shader("..\\b_vert.vert", "..\\b_frag.frag");
-	sky_shader = new Shader("..\\box_shader.vert", "..\\box_fragment.frag");
+	ptr1 = new Shader("..\\VertexS.vert", "..\\FragmentS1.frag"); // 主着色器
+	ptr1->use();
+	ptr1->setInt("diffuseTexture", 0);
+	ptr1->setInt("shadowMap", 1);
+	b_shader = new Shader("..\\b_vert.vert", "..\\b_frag.frag"); // 光源着色器
+	sky_shader = new Shader("..\\box_shader.vert", "..\\box_fragment.frag"); // 天空盒着色器
+	shadow_shader = new Shader("..\\shadow.vert", "..\\shadow.frag", "..\\shadow.geom"); // 阴影着色器
+}
+
+
+void initDepth() {
+	// 初始化阴影
+	glGenFramebuffers(1, &depthMapFBO);
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, depthMap);
+	for (unsigned int i = 0; i < 6; ++i)
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, 
+						SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 // 初始化对象
@@ -989,6 +623,8 @@ int main(int argc, char** argv) {
 	// 初始化着色器
 	initShader();
 
+	
+
 	// 初始化对象
 	initObject();
 	
@@ -1000,7 +636,7 @@ int main(int argc, char** argv) {
 
 	// 初始化粒子
 	createParticles();
-	
+
 	glutMainLoop();
 
 	cleanupGUI();
@@ -1008,12 +644,459 @@ int main(int argc, char** argv) {
 }
 
 
+void renderScene(Shader* shader) {
+	// 房屋模型读取
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.2f, 1.0f, 0.0f)); 
+	model = glm::scale(model, glm::vec3(1.0f/100, 1.0f/100, 1.0f/100));	
+	model = glm::rotate(model, glm::radians(182.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr2->Draw(shader);
 
+	// 地面
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f)); 
+	model = glm::scale(model, glm::vec3(1.5f, 1.0f, 1.5f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr3->Draw(shader);
 
+	// 山脉地形
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.0f, 1.0f, -1.0f)); 
+	model = glm::scale(model, glm::vec3(3.5f, 2.7f, 3.5f));	
+	shader->setMat4("model", model);
+	ptr4->Draw(shader);
 
+	// 驯鹿 1
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, Mov); 
+	model = glm::scale(model, glm::vec3(0.1f/100, 0.1f/100, 0.1f/100));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(r1), glm::vec3(0.0f, 0.0f, 1.0f));
+	shader->setMat4("model", model);
+	ptr5->Draw(shader);
 
+	// 驯鹿 2 right
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(1.0f, 1.0f, 0.48f)); 
+	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(-50.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	shader->setMat4("model", model);
+	ptr5->Draw(shader);
 
+	// 驯鹿 3 left
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.8f, 1.0f, 0.63f)); 
+	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(120.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	shader->setMat4("model", model);
+	ptr5->Draw(shader);
 
+	// 驯鹿 4 back facing
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, Mov_1); 
+	model = glm::scale(model, glm::vec3(0.1f / 100, 1.1f / 100, 0.1f / 100));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(r2), glm::vec3(0.0f, 0.0f, 1.0f));
+	shader->setMat4("model", model);
+	ptr5->Draw(shader);
 
+	// 驯鹿 back on mountain
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.8f, 1.46f, -1.3f)); 
+	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
+	model = glm::rotate(model, glm::radians(110.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(200.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	shader->setMat4("model", model);
+	ptr5->Draw(shader);
 
+	// 驯鹿 front on mountain
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(1.0f, 1.68f, -1.6f)); 
+	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
+	model = glm::rotate(model, glm::radians(112.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(200.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	shader->setMat4("model", model);
+	ptr5->Draw(shader);
 
+	// 驯鹿 more front on mountain
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.7f, 1.85f, -1.95f)); 
+	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
+	model = glm::rotate(model, glm::radians(120.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(203.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	shader->setMat4("model", model);
+	ptr5->Draw(shader);
+
+	// 驯鹿 1 left side scene
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-0.9f, 1.3f, -2.1f)); 
+	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
+	model = glm::rotate(model, glm::radians(98.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr5->Draw(shader);
+
+	// 驯鹿 left side scene front
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-0.7f, 1.17f, -1.7f)); 
+	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
+	model = glm::rotate(model, glm::radians(114.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr5->Draw(shader);
+	   
+	// 驯鹿 behind house
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-0.3f, 1.0f, -0.7f)); 
+	model = glm::scale(model, glm::vec3(0.1f / 100, 0.1f / 100, 0.1f / 100));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(245.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	shader->setMat4("model", model);
+	ptr5->Draw(shader);
+
+	// 长椅 on right towards mountain
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(1.4f, 1.0f, 0.3f));
+	model = glm::scale(model, glm::vec3(0.1f/2.6));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr7->Draw(shader);
+
+	// 长椅 on right towards camera
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(1.4f, 1.0f, 0.7f));
+	model = glm::scale(model, glm::vec3(0.1f / 2.6));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr7->Draw(shader);
+
+	// 长椅 on left
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.0f, 1.0f, 0.3f));
+	model = glm::scale(model, glm::vec3(0.1f / 2.6));	
+	model = glm::rotate(model, glm::radians(-60.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr7->Draw(shader);
+
+	//长椅 on left
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.1f, 1.0f, 0.27f)); 
+	model = glm::scale(model, glm::vec3(0.1f / 2.6));	
+	shader->setMat4("model", model);
+	ptr8->Draw(shader);
+
+	// 灯 左侧
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.7, 1.0, -0.2));
+	model = glm::scale(model, glm::vec3(0.1f / 2.6));	
+	shader->setMat4("model", model);
+	ptr8->Draw(shader);
+
+	// 汽车
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.0, 1.0, -0.1));
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr9->Draw(shader);
+
+	// 房屋右侧雪人
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, Mov_2);
+	model = glm::scale(model, glm::vec3(0.05f));	
+	model = glm::rotate(model, glm::radians(s1), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr10->Draw(shader);
+
+	// 长椅右侧雪人
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(1.2, 0.98, 0.35));
+	model = glm::scale(model, glm::vec3(0.05f));	
+	model = glm::rotate(model, glm::radians(-70.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr10->Draw(shader);
+
+	// 左侧雪人
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.3, 0.98, -0.9));
+	model = glm::scale(model, glm::vec3(0.05f));	
+	model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr10->Draw(shader);
+
+	// 道路
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-3.4, 1.0, -0.7)); 
+	model = glm::scale(model, glm::vec3(0.1f/8, 0.1f/10, 0.1f/5));	
+	shader->setMat4("model", model);
+	ptr11->Draw(shader);
+
+	// 灯柱旁的护栏
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.2, 1.0, -0.15));
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(40.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 左侧极限出的护栏
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-5.0, 1.0, -0.5)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 1 (from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-4.5, 1.0, -0.5)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 2 (from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-4.0, 1.0, -0.5)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 3 (from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-3.5, 1.0, -0.5)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 4 (from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-3.0, 1.0, -0.5)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 5 (from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-2.5, 1.0, -0.5)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 6 (from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-2.0, 1.0, -0.5)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 1 across road(from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-4.75, 1.0, -1.2)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 2 across road(from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-4.25, 1.0, -1.2)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 3 across road(from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-3.75, 1.0, -1.2)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 4 across road(from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-3.25, 1.0, -1.2)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 5 across road(from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-2.75, 1.0, -1.2)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 6 across road(from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-2.25, 1.0, -1.2)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	// 护栏 7 across road(from left)
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.75, 1.0, -1.2)); 
+	model = glm::scale(model, glm::vec3(0.15f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr12->Draw(shader);
+
+	//树木
+	// 在左边的灯旁
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.0, 1.0, -0.1)); 
+	model = glm::scale(model, glm::vec3(0.1f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr13->Draw(shader);
+
+	// 房屋前
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-0.2, 1.0, 0.25)); 
+	model = glm::scale(model, glm::vec3(0.07f));	
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr14->Draw(shader);
+
+	// 就在长凳前
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.5, 1.0, 0.9)); 
+	model = glm::scale(model, glm::vec3(0.07f));	
+	model = glm::rotate(model, glm::radians(270.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr14->Draw(shader);
+
+	// 就在长椅之间
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(1.6, 1.0, -0.6)); 
+	model = glm::scale(model, glm::vec3(0.07f));	
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr14->Draw(shader);
+
+	// 房屋后
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-0.2, 1.0, -1.9)); 
+	model = glm::scale(model, glm::vec3(0.07f));	
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr14->Draw(shader);
+
+	// 在右边的灯旁
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(1.7, 1.0, -0.4)); 
+	model = glm::scale(model, glm::vec3(0.1f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr13->Draw(shader);
+
+	// 在山的右前方
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(2.3, 1.6, -1.2)); 
+	model = glm::scale(model, glm::vec3(0.1f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr13->Draw(shader);
+
+	// 在山顶右方
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(1.8, 1.9, -1.9)); 
+	model = glm::scale(model, glm::vec3(0.1f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr13->Draw(shader);
+
+	// 在山顶左方
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(0.7, 1.3, -1.7)); 
+	model = glm::scale(model, glm::vec3(0.1f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr13->Draw(shader);
+
+	// 小山左方
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-0.5, 1.2, -1.7)); 
+	model = glm::scale(model, glm::vec3(0.1f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr13->Draw(shader);
+
+	// 左后方
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.5, 1.2, -2.4)); 
+	model = glm::scale(model, glm::vec3(0.1f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr13->Draw(shader);
+
+	// 左前方
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-3.5, 0.9, -4.0)); 
+	model = glm::scale(model, glm::vec3(0.07f));	
+	model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr14->Draw(shader);
+
+	// 左侧
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-2.2, 1.0, -0.25)); 
+	model = glm::scale(model, glm::vec3(0.1f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr13->Draw(shader);
+
+	// 路左方
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-3.2, 1.0, -0.2)); 
+	model = glm::scale(model, glm::vec3(0.1f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr13->Draw(shader);
+
+	// 路左过去 1
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-3.8, 1.0, -1.0)); 
+	model = glm::scale(model, glm::vec3(0.1f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr13->Draw(shader);
+
+	// 路左过去 2
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-2.7, 1.0, -1.0)); 
+	model = glm::scale(model, glm::vec3(0.1f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr13->Draw(shader);
+
+	// 路左过去 3
+	model = glm::mat4(1.0f);
+	model = glm::translate(model, glm::vec3(-1.7, 1.0, -1.0)); 
+	model = glm::scale(model, glm::vec3(0.1f));	
+	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader->setMat4("model", model);
+	ptr13->Draw(shader);
+}

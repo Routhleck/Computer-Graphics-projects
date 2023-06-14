@@ -100,6 +100,7 @@ void renderGUI() {
 					ImGui::SliderFloat("Ld=4-Green", &ld4_green, 0.0f, 1.0f);
 					ImGui::SliderFloat("Ld=4-Blue", &ld4_blue, 0.0f, 1.0f);
 				}
+				ImGui::Checkbox("Shadows enable", &shadows);
 		}
 
 		// 添加 "Exit" 按钮

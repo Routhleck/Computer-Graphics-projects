@@ -57,6 +57,8 @@ extern float ld4_red;
 extern float ld4_green;
 extern float ld4_blue;
 
+extern bool shadows;
+
 void renderGUI();
 void initGUI(void* window);
 void cleanupGUI();

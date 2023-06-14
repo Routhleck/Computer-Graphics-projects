@@ -65,12 +65,18 @@ void renderGUI() {
 				}
 				ImGui::Checkbox("Diffuse Light Enable", &diffuseLight_enable);
 				ImGui::Checkbox("Specular Light Enable", &specularLight_enable);
+
+				ImGui::Checkbox("Day and night alternation", &isDayNight);
+				ImGui::SliderFloat("Day and night speed", &dayNightSpeed, 0.0f, 50.0f);
+
 				ImGui::Checkbox("Single Light", &isSingleLight);
-				if (ImGui::CollapsingHeader("Signle Main Light Position")) {
+				if (ImGui::CollapsingHeader("Single Main Light Position")) {
 					ImGui::SliderFloat("Light Position X", &lightPos_x, -10.0f, 10.0f);
 					ImGui::SliderFloat("Light Position Y", &lightPos_y, -10.0f, 10.0f);
 					ImGui::SliderFloat("Light Position Z", &lightPos_z, -10.0f, 10.0f);
 				}
+
+
 				if (ImGui::CollapsingHeader("Kd-Main")) {
 					ImGui::SliderFloat("Kd-Main-Red", &kd1_red, 0.0f, 1.0f);
 					ImGui::SliderFloat("Kd-Main-Green", &kd1_green, 0.0f, 1.0f);
@@ -107,9 +113,10 @@ void renderGUI() {
 					ImGui::SliderFloat("Ld=4-Blue", &ld4_blue, 0.0f, 1.0f);
 				}
 			}
-			if (ImGui::CollapsingHeader("Shadow")) {
-				ImGui::Checkbox("Shadows enable", &shadows);
-			}
+			
+		if (ImGui::CollapsingHeader("Shadow")) {
+			ImGui::Checkbox("Shadows enable", &shadows);
+		}
 
 		// 添加 "Exit" 按钮
 		if (ImGui::Button("Exit")) {
@@ -122,6 +129,7 @@ void renderGUI() {
 	ImGui::Render();
 	ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 }
+
 
 
 

@@ -63,6 +63,9 @@ extern float lightPos_x;
 extern float lightPos_y;
 extern float lightPos_z;
 
+extern bool isDayNight;
+extern float dayNightSpeed;
+
 void renderGUI();
 void initGUI(void* window);
 void cleanupGUI();

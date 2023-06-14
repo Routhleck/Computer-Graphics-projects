@@ -43,31 +43,24 @@ uniform bool isSingleLight;
 
 float ShadowCalculation(vec3 fragPos)
 {
+    // Get vector between fragment position and light position
     vec3 fragToLight = fragPos - lightPos;
+    // Use the light to fragment vector to sample from the depth map    
+    float closestDepth = texture(depthMap, fragToLight).r;
+    // It is currently in linear range between [0,1]. Re-transform back to original value
+    closestDepth *= far_plane;
+    // Now get current linear depth as the length between the fragment and light position
     float currentDepth = length(fragToLight);
+    // Now test for shadows
+    float bias = 0.05; 
+    float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;
 
-    float bias = 0.02;
-    float shadow = 0.0;
-    vec3 fragToLightNorm = fragToLight / far_plane;
-    
-    // PCF
-    float texelSize = 1.0 / textureSize(depthMap, 0).x;
-    for(int x = -1; x <= 1; ++x)
-    {
-        for(int y = -1; y <= 1; ++y)
-        {
-            float pcfDepth = texture(depthMap, fragToLightNorm + vec3(x, y, 0) * texelSize).r; 
-            pcfDepth *= far_plane; 
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
-        }    
-    }
-    shadow /= 9.0;
-    
     return shadow;
 }
 
 
 float result_shadow;
+vec3 final_shadow;
 vec3 final;
 void main()                                                               
 {               
@@ -88,6 +81,9 @@ vec3 viewDir = normalize(viewPos - FragPos);
 vec3 reflectDir = reflect(-lightDir, norm);
 float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
 vec3 specular = specularStrength * spec * Ld * Kd;
+
+// result_shadow = ShadowCalculation(FragPos);
+// final_shadow = result_shadow * (diffuse + specular);
 
 if (isSingleLight == false) {
     //DIFFUSE_2
@@ -128,10 +124,8 @@ if (specularLight_enable == false) specular = vec3(0.0f);
 
 
 // calculate shadow
-result_shadow = 0.0f;
 if (shadows == true) {
-    result_shadow = ShadowCalculation(FragPos);
-    final = ambient + (1.0 - result_shadow) * (diffuse + specular); 
+    final = ambient + diffuse + specular - final_shadow; 
 }
 else {
     final = ambient + diffuse + specular; 

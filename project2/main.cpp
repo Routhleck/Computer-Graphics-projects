@@ -150,6 +150,12 @@ float lightPos_x = 2.0f;
 float lightPos_y = 3.0f;
 float lightPos_z = 0.2f;
 
+// 昼夜交替
+bool isDayNight = false;
+int dayNightState = -1;
+float dayNightSpeed = 1.0f;
+float lightAngle;
+
 // 光源位置
 glm::vec3 lightPos = glm::vec3(lightPos_x, lightPos_y, lightPos_z);
 
@@ -383,13 +389,46 @@ void setLight() {
 
 void renderScene(Shader* shader);
 
+// 全局变量
+float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+void updateDeltaTime() {
+    float currentFrame = glutGet(GLUT_ELAPSED_TIME) * 0.001f;
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+}
+
+void dayNightTrans() {
+    if (dayNightState == -1) {
+        lightPos_x = 0.0f;
+        lightPos_y = 0.0f;
+        lightPos_z = 20.0f;
+        dayNightState = 1;
+		lightAngle = 0;
+    }
+    else {
+		lightAngle += glm::radians(dayNightSpeed) * deltaTime;
+
+        // 计算新的 Y 和 Z 坐标
+        float newY = 20.0f * cos(lightAngle);
+        float newZ = 20.0f * sin(lightAngle);
+
+        // 更新光源位置
+        lightPos_y = newY;
+        lightPos_z = newZ;
+    }
+}
+
+
 //显示函数
 void display() {
-	// 获取时间
-	float t = glutGet(GLUT_ELAPSED_TIME) * 0.001f;
-	float dt = t - lastFrame;
-	lastFrame = t;
+
+	updateDeltaTime();
+
+	// 昼夜交替
+	if (isDayNight) dayNightTrans();
+	else dayNightState = -1;
 
 	// 移动光源
 	glm::vec3 lightPos = glm::vec3(lightPos_x, lightPos_y, lightPos_z);
@@ -662,7 +701,7 @@ void renderScene(Shader* shader) {
 
 	// 地面
 	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f)); 
+	model = glm::translate(model, glm::vec3(0.0f, 1.0f, 0.0f)); 
 	model = glm::scale(model, glm::vec3(1.5f, 1.0f, 1.5f));	
 	model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	shader->setMat4("model", model);

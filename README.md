@@ -35,15 +35,15 @@
 
 ## Particles
 
-![particles](../../Download/particles.gif)
+![particles](README.assets/skybox.gif)
 
 ## Multi-Light
 
-![multi light](README.assets/multi light.gif)
+![multi-light](README.assets/multi-light.gif)
 
 ## Day night alternation
 
-![day night](README.assets/day night.gif)
+![day-night](README.assets/day-night.gif)
 
 # 具体实现
 

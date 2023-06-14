@@ -39,6 +39,7 @@ uniform samplerCube depthMap;
 
 uniform float far_plane;
 uniform bool shadows;
+uniform bool isSingleLight;
 
 float ShadowCalculation(vec3 fragPos)
 {
@@ -88,35 +89,38 @@ vec3 reflectDir = reflect(-lightDir, norm);
 float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
 vec3 specular = specularStrength * spec * Ld * Kd;
 
-//DIFFUSE_2
-lightDir = normalize(lightpos_2 - FragPos);
-diff = max(dot(norm, lightDir), 0.0);
-diffuse = diffuse + (diff * Ld2 * Kd2);
+if (isSingleLight == false) {
+    //DIFFUSE_2
+    lightDir = normalize(lightpos_2 - FragPos);
+    diff = max(dot(norm, lightDir), 0.0);
+    diffuse = diffuse + (diff * Ld2 * Kd2);
 
-//SPECULAR 2
-reflectDir = reflect(-lightDir, norm);
-spec = pow(max(dot(viewDir, reflectDir), 0.0), 128);
-specular += specularStrength * spec * Ld2 * Kd2;
+    //SPECULAR 2
+    reflectDir = reflect(-lightDir, norm);
+    spec = pow(max(dot(viewDir, reflectDir), 0.0), 128);
+    specular += specularStrength * spec * Ld2 * Kd2;
 
-//DIFFUSE_3
-lightDir = normalize(lightpos_3 - FragPos);
-diff = max(dot(norm, lightDir), 0.0);
-diffuse = diffuse + (diff * Ld3 * Kd2);
+    //DIFFUSE_3
+    lightDir = normalize(lightpos_3 - FragPos);
+    diff = max(dot(norm, lightDir), 0.0);
+    diffuse = diffuse + (diff * Ld3 * Kd2);
 
-//SPECULAR_3
-reflectDir = reflect(-lightDir, norm);
-spec = pow(max(dot(viewDir, reflectDir), 0.0), 128);
-specular += specularStrength * spec * Ld3 * Kd2;
+    //SPECULAR_3
+    reflectDir = reflect(-lightDir, norm);
+    spec = pow(max(dot(viewDir, reflectDir), 0.0), 128);
+    specular += specularStrength * spec * Ld3 * Kd2;
 
-//DIFFUSE_4
-lightDir = normalize(lightpos_4 - FragPos);
-diff = max(dot(norm, lightDir), 0.0);
-diffuse = diffuse + (diff * Ld4 * Kd3);
+    //DIFFUSE_4
+    lightDir = normalize(lightpos_4 - FragPos);
+    diff = max(dot(norm, lightDir), 0.0);
+    diffuse = diffuse + (diff * Ld4 * Kd3);
 
-//SPECULAR_4
-reflectDir = reflect(-lightDir, norm);
-spec = pow(max(dot(viewDir, reflectDir), 0.0), 128);
-specular += specularStrength * spec * Ld4 * Kd3;
+    //SPECULAR_4
+    reflectDir = reflect(-lightDir, norm);
+    spec = pow(max(dot(viewDir, reflectDir), 0.0), 128);
+    specular += specularStrength * spec * Ld4 * Kd3;
+}
+
 
 if (ambientLight_enable == false) ambient = vec3(0.0f);
 if (diffuseLight_enable == false) diffuse = vec3(0.0f);

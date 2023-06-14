@@ -145,8 +145,13 @@ bool shadows = false;
 GLfloat aspect = (GLfloat)SHADOW_WIDTH/(GLfloat)SHADOW_HEIGHT;
 float near_plane = 1.0f, far_plane = 25.0f;
 
+bool isSingleLight = false;
+float lightPos_x = 2.0f;
+float lightPos_y = 3.0f;
+float lightPos_z = 0.2f;
+
 // 光源位置
-glm::vec3 lightPos = glm::vec3(-4.0, 3.0, 0.2);
+glm::vec3 lightPos = glm::vec3(lightPos_x, lightPos_y, lightPos_z);
 
 // 立方体每个面
 GLuint VAO, VBO;  // 顶点数组对象和顶点缓冲对象
@@ -387,7 +392,8 @@ void display() {
 	lastFrame = t;
 
 	// 移动光源
-	lightPos.z = static_cast<float>(sin(t * 0.5) * 3.0);
+	glm::vec3 lightPos = glm::vec3(lightPos_x, lightPos_y, lightPos_z);
+	// lightPos.z = static_cast<float>(sin(t * 0.5) * 3.0);
 
 
 
@@ -439,6 +445,7 @@ void display() {
 	ptr1->setVec3("viewPos", cameraPos);
 	ptr1->setBool("shadows", shadows);
 	ptr1->setFloat("far_plane", far_plane);
+	ptr1->setBool("isSingleLight", isSingleLight);
 	
 
 	renderScene(ptr1);

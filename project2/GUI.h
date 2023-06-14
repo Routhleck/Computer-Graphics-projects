@@ -58,6 +58,10 @@ extern float ld4_green;
 extern float ld4_blue;
 
 extern bool shadows;
+extern bool isSingleLight;
+extern float lightPos_x;
+extern float lightPos_y;
+extern float lightPos_z;
 
 void renderGUI();
 void initGUI(void* window);

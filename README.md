@@ -35,7 +35,7 @@
 
 ## Particles
 
-![particles](README.assets/skybox.gif)
+![particles](README.assets/particles.gif)
 
 ## Multi-Light
 

@@ -36,35 +36,6 @@ void respawnByIndex(int index) {
 	par_sys[index].gravity = particles_gravity; // 重力加速度
 }
 
-// // 为所有粒子设置存活状态
-// void setAlive(bool alive) {
-// 	for (int i = 0 i < MAX_PARTICLES i++) {
-// 		par_sys[i].alive = alive
-// 	}
-// }
-
-// // 为所有粒子设置寿命
-// void setLife(float life) {
-// 	for (int i = 0 i < MAX_PARTICLES i++) {
-// 		par_sys[i].life = life
-// 	}
-// }
-
-// // 为所有粒子设置衰减速度
-// void setFade(int fadeMAX) {
-// 	for (int i = 0 i < MAX_PARTICLES i++) {
-// 		par_sys[i].fade = float(rand() % fadeMAX) / 1000.0f + 0.003f
-// 	}
-// }
-
-// // 为所有粒子设置重力
-// void setGravity(float gravity) {
-// 	for (int i = 0 i < MAX_PARTICLES i++) {
-// 		par_sys[i].gravity = gravity
-// 	}
-// }
-
-
 void updateParticles() {
 	std::vector <particles>().swap(par_sys);
 	createParticles();
